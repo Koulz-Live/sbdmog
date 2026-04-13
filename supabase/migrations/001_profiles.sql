@@ -22,11 +22,21 @@ create policy "profiles_select_own" on profiles
 create policy "profiles_update_own" on profiles
   for update using (auth.uid() = id);
 
--- Admins can read all profiles
-create policy "profiles_select_admin" on profiles
-  for select using (
-    exists (select 1 from profiles p where p.id = auth.uid() and p.role = 'admin')
+-- Helper: check if current user is admin (security definer avoids RLS recursion)
+create or replace function is_admin()
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from profiles where id = auth.uid() and role = 'admin'
   );
+$$;
+
+-- Admins can read all profiles (uses security definer fn to avoid self-referential RLS loop)
+create policy "profiles_select_admin" on profiles
+  for select using (is_admin());
 
 -- Trigger: keep updated_at current
 create or replace function update_updated_at_column()
