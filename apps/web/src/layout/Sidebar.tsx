@@ -63,12 +63,18 @@ export function Sidebar() {
   const { isAdmin } = useAuth();
 
   return (
-    <aside className="sidebar d-flex flex-column">
+    <aside
+      className="sidebar"
+      style={{ height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}
+    >
       {/* Logo / branding */}
-      <div className="px-3 py-4 border-bottom border-white border-opacity-25">
+      <div
+        className="px-3 py-4 border-bottom border-white border-opacity-25"
+        style={{ position: 'sticky', top: 0, background: 'var(--che-primary)', zIndex: 1 }}
+      >
         <div className="d-flex align-items-center gap-2">
           <div
-            className="rounded-circle bg-white d-flex align-items-center justify-content-center"
+            className="rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0"
             style={{ width: 36, height: 36 }}
           >
             <span className="fw-bold text-primary small">CHE</span>
@@ -81,7 +87,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-grow-1 overflow-y-auto py-2">
+      <nav className="py-2">
         {NAV_SECTIONS.map((section) => {
           const visibleItems = section.items.filter(
             (item) => !item.adminOnly || isAdmin,
@@ -89,7 +95,7 @@ export function Sidebar() {
           if (visibleItems.length === 0) return null;
 
           return (
-            <div key={section.heading} className="mb-2">
+            <div key={section.heading} className="mb-1">
               <div className="sidebar-heading">{section.heading}</div>
               {visibleItems.map((item) => (
                 <NavLink

@@ -26,7 +26,9 @@ export function Topbar() {
           <>
             <span className={`badge ${roleBadgeClass}`}>{roleLabel}</span>
             <span className="text-muted small fw-semibold">
-              {user.full_name ?? user.id.slice(0, 8)}
+              {user.full_name && user.full_name !== user.id
+                ? user.full_name
+                : (user as any).email ?? user.id.slice(0, 8)}
             </span>
           </>
         )}

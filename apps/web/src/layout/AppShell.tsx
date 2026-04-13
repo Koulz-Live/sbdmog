@@ -8,11 +8,17 @@ import { Topbar } from './Topbar.js';
 
 export function AppShell() {
   return (
-    <div className="d-flex" style={{ minHeight: '100vh' }}>
+    <div className="d-flex" style={{ minHeight: '100vh', overflow: 'hidden' }}>
       <Sidebar />
-      <div className="main-content d-flex flex-column flex-grow-1 overflow-hidden">
+      <div
+        className="d-flex flex-column flex-grow-1"
+        style={{ minWidth: 0, height: '100vh', overflow: 'hidden' }}
+      >
         <Topbar />
-        <main className="flex-grow-1 overflow-y-auto p-4 bg-light">
+        <main
+          className="flex-grow-1 p-4 bg-light"
+          style={{ overflowY: 'auto' }}
+        >
           <Outlet />
         </main>
       </div>
