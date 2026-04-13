@@ -16,6 +16,9 @@ npm run build --workspace=packages/supabase
 echo "==> Building packages/ai"
 npm run build --workspace=packages/ai
 
+echo "==> Building server"
+npm run build --workspace=server
+
 echo "==> Building apps/web"
 npm run build --workspace=apps/web
 
