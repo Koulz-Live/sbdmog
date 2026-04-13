@@ -1,0 +1,19 @@
+{
+  "name": "@heqcis/ai",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@heqcis/types": "*",
+    "openai": "^4.47.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.0"
+  }
+}

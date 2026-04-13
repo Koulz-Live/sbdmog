@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+apps/web/dist/
+*.tsbuildinfo
+.DS_Store
+azure-functions/local.settings.json
+azure-functions/dist/
+api/dist/
+

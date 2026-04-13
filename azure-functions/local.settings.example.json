@@ -1,0 +1,39 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+
+    "HEQCIS_ENVIRONMENT": "development",
+
+    "WEBHOOK_BASE_URL": "https://your-vercel-app.vercel.app",
+    "WEBHOOK_SECRET": "your-hmac-secret-min-32-chars-change-me",
+    "WEBHOOK_TIMEOUT_MS": "10000",
+    "WEBHOOK_MAX_RETRIES": "3",
+    "WEBHOOK_RETRY_DELAY_MS": "2000",
+
+    "SQL_SERVER": "your-sql-server.database.windows.net",
+    "SQL_DATABASE": "Heqcis_web",
+    "SQL_USER": "heqcis_readonly",
+    "SQL_PASSWORD": "your-sql-password",
+    "SQL_PORT": "1433",
+    "SQL_ENCRYPT": "true",
+    "SQL_TRUST_SERVER_CERT": "false",
+    "SQL_CONNECT_TIMEOUT_MS": "15000",
+    "SQL_REQUEST_TIMEOUT_MS": "30000",
+    "SQL_CHECK_SCHEDULE": "0 */30 * * * *",
+
+    "BACKUP_CHECK_SCHEDULE": "0 0 */4 * * *",
+    "BACKUP_SQL_QUERY": "SELECT TOP 20 database_name, backup_start_date, backup_finish_date, type, is_damaged, has_bulk_logged_data, backup_size FROM msdb.dbo.backupset WHERE database_name = 'Heqcis_web' ORDER BY backup_start_date DESC",
+
+    "ETL_CHECK_SCHEDULE": "0 */15 * * * *",
+    "ETL_JOB_NAME": "HEQCISWEB_Job",
+    "ETL_SQL_QUERY": "SELECT TOP 5 job_id, name, enabled, date_created, date_modified FROM msdb.dbo.sysjobs WHERE name = 'HEQCISWEB_Job'",
+
+    "KEY_VAULT_URI": "",
+    "USE_KEY_VAULT": "false",
+
+    "APPINSIGHTS_INSTRUMENTATIONKEY": ""
+  }
+}

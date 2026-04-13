@@ -1,0 +1,84 @@
+/* apps/web/src/index.css */
+/* Minimal global overrides — Bootstrap 5 handles the rest. */
+
+:root {
+  --che-primary:   #003087;
+  --che-accent:    #e8860c;
+  --che-sidebar-w: 240px;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #f4f6f9;
+  color: #212529;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--che-sidebar-w);
+  min-height: 100vh;
+  background-color: var(--che-primary);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sidebar .nav-link {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: 0.375rem;
+  margin: 0.1rem 0.5rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: #fff;
+  background-color: rgba(255,255,255,0.15);
+}
+
+.sidebar .nav-link .bi {
+  width: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+/* ── Topbar ──────────────────────────────────────────────────────────────────── */
+.topbar {
+  height: 56px;
+  background-color: #fff;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* ── Main content area ───────────────────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Summary cards ───────────────────────────────────────────────────────────── */
+.summary-card {
+  border-left: 4px solid var(--che-primary);
+  transition: transform 0.12s;
+}
+.summary-card:hover {
+  transform: translateY(-2px);
+}
+.summary-card.danger  { border-left-color: #dc3545; }
+.summary-card.warning { border-left-color: #ffc107; }
+.summary-card.success { border-left-color: #198754; }
+.summary-card.info    { border-left-color: #0dcaf0; }
+
+/* ── Data tables ─────────────────────────────────────────────────────────────── */
+.table th {
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+}
+
+/* ── Severity / Status badges ────────────────────────────────────────────────── */
+.badge-p1 { background-color: #dc3545; color: #fff; }
+.badge-p2 { background-color: #fd7e14; color: #fff; }
+.badge-p3 { background-color: #ffc107; color: #000; }
+.badge-p4 { background-color: #6c757d; color: #fff; }
