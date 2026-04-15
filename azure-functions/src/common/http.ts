@@ -1,8 +1,5 @@
-// azure-functions/src/common/http.ts
-// Minimal HTTP client wrapper using node-fetch with timeout and abort support.
+// Minimal HTTP client wrapper using native fetch (Node 18+).
 // Kept separate so the webhook helper can focus on retry logic only.
-
-import fetch, { RequestInit, Response } from 'node-fetch';
 
 export interface HttpRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -30,7 +27,7 @@ export async function httpRequest(url: string, options: HttpRequestOptions = {})
   const init: RequestInit = {
     method,
     headers,
-    signal: controller.signal as never,
+    signal: controller.signal,
   };
   if (body !== undefined) {
     init.body = body;
