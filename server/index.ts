@@ -1,5 +1,5 @@
-// api/index.ts
-// Single Vercel Function entrypoint. All routes are wired here.
+// server/index.ts
+// Single Vercel Function entrypoint — all routes are wired here.
 // maxDuration: 30s, region: lhr1 — configured in vercel.json.
 
 import express from 'express';
@@ -48,9 +48,9 @@ app.get('/health',    (_req, res) => res.json({ status: 'ok' }));
 app.get('/readiness', (_req, res) => res.json({ status: 'ready' }));
 
 // ── Webhook routes (HMAC auth — not JWT) ─────────────────────────────────────
-app.post('/webhooks/backup',    handleBackupResults);
-app.post('/webhooks/etl',       handleEtlResults);
-app.post('/webhooks/sql-check', handleSqlCheckResults);
+app.post('/webhooks/backup-results',    handleBackupResults);
+app.post('/webhooks/etl-results',       handleEtlResults);
+app.post('/webhooks/sql-check-results', handleSqlCheckResults);
 
 // ── Authenticated API routes ──────────────────────────────────────────────────
 // All routes below require a valid Supabase JWT in Authorization: Bearer <token>
