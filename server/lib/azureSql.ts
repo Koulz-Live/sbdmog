@@ -86,6 +86,20 @@ export async function runQuery<T = Record<string, unknown>>(
   }
 }
 
+// Parameterised query helper — avoids SQL injection for dynamic values
+export async function runParamQuery<T = Record<string, unknown>>(
+  builder: (req: sql.Request) => Promise<sql.IResult<T>>,
+): Promise<QueryResult<T>> {
+  try {
+    const pool   = await getPool();
+    const result = await builder(pool.request());
+    return { rows: result.recordset as T[], error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { rows: [], error: message };
+  }
+}
+
 // ─── Connectivity probe ───────────────────────────────────────────────────────
 
 export async function checkConnectivity(): Promise<{ ok: boolean; latencyMs: number; error: string | null }> {
