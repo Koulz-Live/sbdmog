@@ -8,5 +8,6 @@ apps/web/dist/
 .DS_Store
 azure-functions/local.settings.json
 azure-functions/dist/
+azure-functions/deploy.zip
 api/dist/
 
