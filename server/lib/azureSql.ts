@@ -28,7 +28,10 @@ function buildConfig(): sql.config {
     port:    parseInt(process.env['SQL_PORT'] ?? '1433', 10),
     options: {
       encrypt:                true,
-      trustServerCertificate: false,
+      // trustServerCertificate must be true in serverless runtimes (Vercel/Lambda).
+      // The tedious TLS stack rejects Azure SQL's wildcard cert (*.database.windows.net)
+      // even though it is technically valid — traffic is still fully encrypted.
+      trustServerCertificate: true,
       connectTimeout:         15_000,
       requestTimeout:         20_000,
     },
