@@ -9,16 +9,22 @@ import * as sql from 'mssql';
 // ─── Connection config ────────────────────────────────────────────────────────
 
 function buildConfig(): sql.config {
-  const server   = process.env['SQL_SERVER']   ?? '';
-  const database = process.env['SQL_DATABASE'] ?? '';
-  const user     = process.env['SQL_USER']     ?? '';
-  const password = process.env['SQL_PASSWORD'] ?? '';
+  // .trim() guards against trailing newlines/spaces accidentally pasted into Vercel env vars
+  const server   = (process.env['SQL_SERVER']   ?? '').trim();
+  const database = (process.env['SQL_DATABASE'] ?? '').trim();
+  const user     = (process.env['SQL_USER']     ?? '').trim();
+  const password = (process.env['SQL_PASSWORD'] ?? '').trim();
 
   if (!server || !database || !user || !password) {
     throw new Error(
       '[azureSql] Missing SQL env vars: SQL_SERVER, SQL_DATABASE, SQL_USER, SQL_PASSWORD',
     );
   }
+
+  console.log(
+    `[azureSql] Connecting → server="${server}" db="${database}" user="${user}" ` +
+    `user_length=${user.length} server_length=${server.length}`,
+  );
 
   return {
     server,
