@@ -18,11 +18,50 @@ body {
   width: var(--che-sidebar-w);
   min-width: var(--che-sidebar-w);
   min-height: 100vh;
+  height: 100vh;
   background-color: var(--che-primary);
   color: #fff;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* ── Mobile sidebar drawer ───────────────────────────────────────────────────── */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--che-sidebar-w);
+    z-index: 1045;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    min-height: 100dvh;
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Semi-transparent backdrop shown behind the open drawer on mobile */
+.sidebar-backdrop {
+  display: none;
+}
+@media (max-width: 991.98px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1044;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(1px);
+  }
 }
 
 /* Section headings (Operations, Reporting, etc.) */

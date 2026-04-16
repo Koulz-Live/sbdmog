@@ -1,9 +1,15 @@
 // apps/web/src/layout/Sidebar.tsx
 // CHE-branded navigation sidebar. Uses React Router NavLink for active states.
+// On mobile (< lg) it slides in as a fixed drawer overlay.
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
+
+interface SidebarProps {
+  isOpen:  boolean;
+  onClose: () => void;
+}
 
 interface NavItem {
   to:    string;
@@ -60,17 +66,17 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { isAdmin } = useAuth();
+  // Auto-close the drawer when a nav link is clicked on mobile
+  const location = useLocation();
+  React.useEffect(() => { onClose(); }, [location.pathname]);
 
   return (
-    <aside
-      className="sidebar"
-      style={{ height: '100vh', overflowY: 'auto', position: 'sticky', top: 0 }}
-    >
+    <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
       {/* Logo / branding */}
       <div
-        className="px-3 py-4 border-bottom border-white border-opacity-25"
+        className="px-3 py-4 border-bottom border-white border-opacity-25 d-flex align-items-center justify-content-between"
         style={{ position: 'sticky', top: 0, background: 'var(--che-primary)', zIndex: 1 }}
       >
         <div className="d-flex align-items-center gap-2">
@@ -85,6 +91,14 @@ export function Sidebar() {
             <div className="text-white-50" style={{ fontSize: '0.65rem' }}>Service Operations</div>
           </div>
         </div>
+        {/* Close button — mobile only */}
+        <button
+          className="btn btn-sm btn-link text-white d-lg-none p-0 ms-2"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <i className="bi bi-x-lg fs-5" />
+        </button>
       </div>
 
       {/* Navigation */}
