@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api.js';
 import { DataTable, type Column } from '../common/DataTable.js';
 import { StatusBadge } from '../common/StatusBadge.js';
@@ -38,6 +39,7 @@ const COLUMNS: Column<MonthlyReport>[] = [
 ];
 
 export function MonthlyReports() {
+  const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['monthlyReports'],
     queryFn:  () => apiGet<ListResponse>('/monthly-reports'),
@@ -62,7 +64,8 @@ export function MonthlyReports() {
         <EmptyState icon="bi-calendar3" title="No monthly reports found" />
       )}
       {reports.length > 0 && (
-        <DataTable columns={COLUMNS} data={reports} rowKey={(r) => r.id} />
+        <DataTable columns={COLUMNS} data={reports} rowKey={(r) => r.id}
+          onRowClick={(r) => navigate(`/monthly-reports/${r.id}`)} />
       )}
     </div>
   );

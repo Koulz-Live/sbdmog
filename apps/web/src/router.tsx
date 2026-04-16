@@ -24,6 +24,8 @@ const MonthlyReports     = lazy(() => import('./pages/MonthlyReports.js').then((
 const SecurityFindings   = lazy(() => import('./pages/SecurityFindings.js').then((m) => ({ default: m.SecurityFindings })));
 const PopiaEvents        = lazy(() => import('./pages/PopiaEvents.js').then((m) => ({ default: m.PopiaEvents })));
 const ChangeRequests     = lazy(() => import('./pages/ChangeRequests.js').then((m) => ({ default: m.ChangeRequests })));
+const ChangeRequestDetail = lazy(() => import('./pages/change-requests/ChangeRequestDetail.js').then((m) => ({ default: m.ChangeRequestDetail })));
+const MonthlyReportDetail = lazy(() => import('./pages/monthly-reports/MonthlyReportDetail.js').then((m) => ({ default: m.MonthlyReportDetail })));
 const Documents          = lazy(() => import('./pages/Documents.js').then((m) => ({ default: m.Documents })));
 const HandoverItems      = lazy(() => import('./pages/HandoverItems.js').then((m) => ({ default: m.HandoverItems })));
 const AuditLogs          = lazy(() => import('./pages/AuditLogs.js').then((m) => ({ default: m.AuditLogs })));
@@ -59,9 +61,11 @@ export const router = createBrowserRouter([
           { path: 'report-requests',      element: <SuspenseWrapper><ReportRequests /></SuspenseWrapper> },
           { path: 'submission-readiness', element: <SuspenseWrapper><SubmissionReadiness /></SuspenseWrapper> },
           { path: 'monthly-reports',      element: <SuspenseWrapper><MonthlyReports /></SuspenseWrapper> },
+          { path: 'monthly-reports/:id',  element: <SuspenseWrapper><MonthlyReportDetail /></SuspenseWrapper> },
           { path: 'security-findings',    element: <SuspenseWrapper><SecurityFindings /></SuspenseWrapper> },
           { path: 'popia-events',         element: <SuspenseWrapper><PopiaEvents /></SuspenseWrapper> },
           { path: 'change-requests',      element: <SuspenseWrapper><ChangeRequests /></SuspenseWrapper> },
+          { path: 'change-requests/:id',  element: <SuspenseWrapper><ChangeRequestDetail /></SuspenseWrapper> },
           { path: 'documents',            element: <SuspenseWrapper><Documents /></SuspenseWrapper> },
           { path: 'handover-items',       element: <SuspenseWrapper><HandoverItems /></SuspenseWrapper> },
           { path: 'audit-logs',           element: <SuspenseWrapper><AuditLogs /></SuspenseWrapper> },
