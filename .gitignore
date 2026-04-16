@@ -11,3 +11,4 @@ azure-functions/dist/
 azure-functions/deploy.zip
 api/dist/
 
+.vercel

@@ -8,3 +8,5 @@ export * from './prompts/rcaDraft.js';
 export * from './prompts/changeRiskAssessment.js';
 export * from './prompts/monthlyReportDraft.js';
 export * from './prompts/documentationAssist.js';
+export * from './prompts/governanceInsights.js';
+export * from './services/governanceInsights.js';

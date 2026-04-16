@@ -27,6 +27,7 @@ const ChangeRequests     = lazy(() => import('./pages/ChangeRequests.js').then((
 const Documents          = lazy(() => import('./pages/Documents.js').then((m) => ({ default: m.Documents })));
 const HandoverItems      = lazy(() => import('./pages/HandoverItems.js').then((m) => ({ default: m.HandoverItems })));
 const AuditLogs          = lazy(() => import('./pages/AuditLogs.js').then((m) => ({ default: m.AuditLogs })));
+const GovernanceInsights = lazy(() => import('./pages/GovernanceInsights.js').then((m) => ({ default: m.GovernanceInsights })));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
           { path: 'documents',            element: <SuspenseWrapper><Documents /></SuspenseWrapper> },
           { path: 'handover-items',       element: <SuspenseWrapper><HandoverItems /></SuspenseWrapper> },
           { path: 'audit-logs',           element: <SuspenseWrapper><AuditLogs /></SuspenseWrapper> },
+          { path: 'governance-insights',  element: <SuspenseWrapper><GovernanceInsights /></SuspenseWrapper> },
         ],
       },
     ],

@@ -42,6 +42,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: '/security-findings', icon: 'bi-shield-exclamation', label: 'Security Findings' },
       { to: '/popia-events',      icon: 'bi-person-lock',    label: 'POPIA Events' },
       { to: '/change-requests',   icon: 'bi-arrow-left-right', label: 'Change Requests' },
+      { to: '/governance-insights', icon: 'bi-stars',        label: 'Governance Insights' },
     ],
   },
   {
