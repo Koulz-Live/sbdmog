@@ -23,6 +23,7 @@ import { documentsRouter }             from './routes/documents.js';
 import { monthlyReportsRouter }        from './routes/monthlyReports.js';
 import { handoverItemsRouter }         from './routes/handoverItems.js';
 import { auditLogsRouter }             from './routes/auditLogs.js';
+import { sqlStatsRouter }              from './routes/sqlStats.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
@@ -71,6 +72,7 @@ app.use('/api/documents',             documentsRouter);
 app.use('/api/monthly-reports',       monthlyReportsRouter);
 app.use('/api/handover-items',        handoverItemsRouter);
 app.use('/api/audit-logs',            auditLogsRouter);
+app.use('/api/sql-stats',             sqlStatsRouter);
 
 // ── 404 catch-all ─────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

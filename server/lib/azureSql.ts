@@ -1,0 +1,95 @@
+// server/lib/azureSql.ts
+// Lightweight Azure SQL client for the Express server.
+// Reads connection details from environment variables.
+// Uses a module-level singleton pool so connections are reused across
+// requests within the same serverless function warm instance.
+
+import * as sql from 'mssql';
+
+// ─── Connection config ────────────────────────────────────────────────────────
+
+function buildConfig(): sql.config {
+  const server   = process.env['SQL_SERVER']   ?? '';
+  const database = process.env['SQL_DATABASE'] ?? '';
+  const user     = process.env['SQL_USER']     ?? '';
+  const password = process.env['SQL_PASSWORD'] ?? '';
+
+  if (!server || !database || !user || !password) {
+    throw new Error(
+      '[azureSql] Missing SQL env vars: SQL_SERVER, SQL_DATABASE, SQL_USER, SQL_PASSWORD',
+    );
+  }
+
+  return {
+    server,
+    database,
+    user,
+    password,
+    port:    parseInt(process.env['SQL_PORT'] ?? '1433', 10),
+    options: {
+      encrypt:                true,
+      trustServerCertificate: false,
+      connectTimeout:         15_000,
+      requestTimeout:         20_000,
+    },
+  };
+}
+
+// ─── Singleton pool ───────────────────────────────────────────────────────────
+
+let _pool: sql.ConnectionPool | null = null;
+let _poolPromise: Promise<sql.ConnectionPool> | null = null;
+
+export async function getPool(): Promise<sql.ConnectionPool> {
+  if (_pool?.connected) return _pool;
+
+  if (_poolPromise) return _poolPromise;
+
+  _poolPromise = sql.connect(buildConfig()).then((pool) => {
+    _pool = pool;
+    pool.on('error', () => {
+      _pool        = null;
+      _poolPromise = null;
+    });
+    return pool;
+  });
+
+  return _poolPromise;
+}
+
+// ─── Query helper ─────────────────────────────────────────────────────────────
+
+export interface QueryResult<T = Record<string, unknown>> {
+  rows:  T[];
+  error: string | null;
+}
+
+export async function runQuery<T = Record<string, unknown>>(
+  query: string,
+): Promise<QueryResult<T>> {
+  try {
+    const pool   = await getPool();
+    const result = await pool.request().query(query);
+    return { rows: result.recordset as T[], error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { rows: [], error: message };
+  }
+}
+
+// ─── Connectivity probe ───────────────────────────────────────────────────────
+
+export async function checkConnectivity(): Promise<{ ok: boolean; latencyMs: number; error: string | null }> {
+  const t0 = Date.now();
+  try {
+    const pool = await getPool();
+    await pool.request().query('SELECT 1 AS ping');
+    return { ok: true, latencyMs: Date.now() - t0, error: null };
+  } catch (err) {
+    return {
+      ok:        false,
+      latencyMs: Date.now() - t0,
+      error:     err instanceof Error ? err.message : String(err),
+    };
+  }
+}

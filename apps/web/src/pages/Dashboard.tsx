@@ -19,6 +19,33 @@ interface DashboardSummary {
   open_popia_events:         number;
 }
 
+// ─── Azure SQL stats types ────────────────────────────────────────────────────
+
+interface ColumnBreakdownItem {
+  label: string;
+  count: number;
+}
+
+interface TableStat {
+  table:       string;
+  description: string;
+  total_rows:  number;
+  columns:     { name: string; label: string; breakdown: ColumnBreakdownItem[] }[];
+  last_updated: string | null;
+}
+
+interface SqlStatsResponse {
+  connected:   boolean;
+  latency_ms:  number;
+  checked_at:  string;
+  server:      string;
+  database:    string;
+  tables:      TableStat[];
+  error:       string | null;
+}
+
+// ─── Summary card ─────────────────────────────────────────────────────────────
+
 interface SummaryCardProps {
   title:     string;
   value:     number;
@@ -49,6 +76,130 @@ function SummaryCard({ title, value, variant, icon, linkTo }: SummaryCardProps) 
   );
 }
 
+// ─── Azure SQL panel ──────────────────────────────────────────────────────────
+
+function breakdownVariant(label: string): string {
+  const l = label.toLowerCase();
+  if (l.includes('fail') || l.includes('damage'))  return 'danger';
+  if (l.includes('cancel') || l.includes('retry'))  return 'warning';
+  if (l.includes('success') || l.includes('healthy') || l.includes('enabled')) return 'success';
+  return 'secondary';
+}
+
+function SqlTableCard({ stat }: { stat: TableStat }) {
+  const shortName = stat.table.replace('dbo.', '');
+
+  return (
+    <div className="card border-0 shadow-sm h-100">
+      <div className="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-2">
+        <div>
+          <span className="fw-semibold me-2" style={{ fontFamily: 'monospace', fontSize: '0.88rem' }}>
+            {stat.table}
+          </span>
+          <span
+            className="badge bg-primary bg-opacity-10 text-primary fw-semibold"
+            style={{ fontSize: '0.75rem' }}
+          >
+            {stat.total_rows.toLocaleString()} rows
+          </span>
+        </div>
+        {stat.last_updated && (
+          <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+            latest: {new Date(stat.last_updated).toLocaleString()}
+          </span>
+        )}
+      </div>
+
+      <div className="card-body p-3">
+        <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}>{stat.description}</p>
+
+        <div className="row g-3">
+          {stat.columns.map((col) => (
+            <div key={col.name} className="col-12 col-md-4">
+              <div className="text-muted fw-semibold text-uppercase mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.04em' }}>
+                {col.label}
+              </div>
+              <table className="table table-sm table-borderless mb-0" style={{ fontSize: '0.82rem' }}>
+                <tbody>
+                  {col.breakdown.map((item) => (
+                    <tr key={item.label}>
+                      <td className="ps-0 py-1">
+                        <span className={`badge bg-${breakdownVariant(item.label)} bg-opacity-10 text-${breakdownVariant(item.label)} fw-normal`}>
+                          {item.label}
+                        </span>
+                      </td>
+                      <td className="py-1 text-end fw-semibold pe-0">
+                        {typeof item.count === 'number' && item.count % 1 !== 0
+                          ? `${item.count.toFixed(2)} GB`
+                          : item.count.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AzureSqlPanel({ stats, isLoading, error, refetch }: {
+  stats:     SqlStatsResponse | undefined;
+  isLoading: boolean;
+  error:     Error | null;
+  refetch:   () => void;
+}) {
+  return (
+    <div className="mt-5">
+      {/* Section header */}
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <div className="d-flex align-items-center gap-2">
+          <i className="bi bi-database-fill text-primary fs-5" />
+          <h5 className="mb-0 fw-semibold">Azure SQL Database</h5>
+          {stats && (
+            <span
+              className={`badge ${stats.connected ? 'bg-success' : 'bg-danger'} ms-1`}
+              style={{ fontSize: '0.7rem' }}
+            >
+              {stats.connected ? `Connected · ${stats.latency_ms} ms` : 'Disconnected'}
+            </span>
+          )}
+        </div>
+        {stats && (
+          <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+            <span className="me-2 fw-semibold" style={{ fontFamily: 'monospace' }}>{stats.server}</span>
+            / <span className="ms-1 fw-semibold" style={{ fontFamily: 'monospace' }}>{stats.database}</span>
+          </span>
+        )}
+      </div>
+
+      {isLoading && <LoadingSpinner message="Querying Azure SQL…" size="sm" />}
+      {error     && <ErrorAlert error={error} onRetry={refetch} />}
+
+      {stats && !stats.connected && (
+        <div className="alert alert-warning d-flex align-items-center gap-2">
+          <i className="bi bi-exclamation-triangle-fill" />
+          <span>Azure SQL is unreachable: {stats.error}</span>
+        </div>
+      )}
+
+      {stats?.connected && (
+        <div className="row g-3">
+          {stats.tables.map((t) => (
+            <div key={t.table} className="col-12 col-xl-6">
+              <SqlTableCard stat={t} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Dashboard page ───────────────────────────────────────────────────────────
+
 export function Dashboard() {
   const {
     data:    summary,
@@ -60,13 +211,30 @@ export function Dashboard() {
     queryFn:  () => apiGet<DashboardSummary>('/dashboard'),
   });
 
+  const {
+    data:    sqlStats,
+    isLoading: sqlLoading,
+    error:     sqlError,
+    refetch:   sqlRefetch,
+  } = useQuery({
+    queryKey:           ['sql-stats'],
+    queryFn:            () => apiGet<SqlStatsResponse>('/sql-stats'),
+    staleTime:          60_000,   // re-fetch after 1 min
+    refetchOnWindowFocus: false,
+  });
+
+  function handleRefresh() {
+    refetch();
+    sqlRefetch();
+  }
+
   return (
     <div>
       <PageHeader
         title="Operations Dashboard"
         subtitle="Live summary of all HEQCIS service health indicators"
         actions={
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
+          <button className="btn btn-sm btn-outline-secondary" onClick={handleRefresh}>
             <i className="bi bi-arrow-clockwise me-1" />
             Refresh
           </button>
@@ -155,6 +323,15 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Azure SQL section */}
+      <AzureSqlPanel
+        stats={sqlStats}
+        isLoading={sqlLoading}
+        error={sqlError}
+        refetch={sqlRefetch}
+      />
     </div>
   );
 }
+

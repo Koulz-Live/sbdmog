@@ -12,7 +12,9 @@
     "@heqcis/core": "*",
     "@heqcis/supabase": "*",
     "@heqcis/types": "*",
+    "@types/mssql": "^9.1.11",
     "express": "^4.19.2",
+    "mssql": "^12.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
