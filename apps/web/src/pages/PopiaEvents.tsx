@@ -68,10 +68,9 @@ export function PopiaEvents() {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">All statuses</option>
-          <option value="new">New</option>
-          <option value="investigating">Investigating</option>
-          <option value="notified">Notified</option>
-          <option value="contained">Contained</option>
+          <option value="open">Open</option>
+          <option value="under_review">Under Review</option>
+          <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>

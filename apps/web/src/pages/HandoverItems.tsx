@@ -55,10 +55,9 @@ export function HandoverItems() {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">All statuses</option>
-          <option value="open">Open</option>
-          <option value="acknowledged">Acknowledged</option>
-          <option value="actioned">Actioned</option>
-          <option value="closed">Closed</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
         </select>
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
           <i className="bi bi-arrow-clockwise" />

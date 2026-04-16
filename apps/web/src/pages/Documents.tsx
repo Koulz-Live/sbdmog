@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api.js';
 import { DataTable, type Column } from '../common/DataTable.js';
 import { PageHeader } from '../layout/PageHeader.js';
@@ -27,8 +26,6 @@ const COLUMNS: Column<Document>[] = [
 ];
 
 export function Documents() {
-  const navigate = useNavigate();
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['documents'],
     queryFn:  () => apiGet<ListResponse>('/documents'),
@@ -57,7 +54,6 @@ export function Documents() {
           columns={COLUMNS}
           data={docs}
           rowKey={(r) => r.id}
-          onRowClick={(r) => navigate(`/documents/${r.slug}`)}
         />
       )}
     </div>

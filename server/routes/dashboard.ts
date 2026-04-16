@@ -11,7 +11,7 @@ export const dashboardRouter = Router();
 dashboardRouter.get('/', async (req, res: Response) => {
   try {
     const summary = await getDashboardSummary(adminClient);
-    res.json({ data: summary });
+    res.json(summary);
   } catch (err) {
     console.error('[dashboard]', err);
     res.status(500).json({ error: 'Failed to load dashboard summary.' });

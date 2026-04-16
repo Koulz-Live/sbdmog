@@ -84,9 +84,11 @@ export function SecurityFindings() {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="mitigated">Mitigated</option>
+          <option value="open">Open</option>
+          <option value="in_remediation">In Remediation</option>
           <option value="remediated">Remediated</option>
+          <option value="accepted">Accepted</option>
+          <option value="false_positive">False Positive</option>
         </select>
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
           <i className="bi bi-arrow-clockwise" />

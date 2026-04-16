@@ -61,10 +61,10 @@ export function ReportRequests() {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">All statuses</option>
-          <option value="requested">Requested</option>
+          <option value="submitted">Submitted</option>
           <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="delivered">Delivered</option>
+          <option value="closed">Closed</option>
         </select>
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
           <i className="bi bi-arrow-clockwise" />

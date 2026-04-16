@@ -43,7 +43,10 @@ export function useIncidents(params: IncidentListParams = {}) {
 export function useIncident(id: string) {
   return useQuery({
     queryKey: ['incidents', id],
-    queryFn:  () => apiGet<Incident>(`/incidents/${id}`),
+    queryFn:  async () => {
+      const res = await apiGet<{ data: Incident & { updates: IncidentUpdate[] } }>(`/incidents/${id}`);
+      return res.data;
+    },
     enabled:  Boolean(id),
   });
 }
@@ -78,7 +81,7 @@ export function useUpdateIncident(id: string) {
 export function useAddIncidentUpdate(incidentId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { update_text: string; updated_by: string }) =>
+    mutationFn: (body: { content: string }) =>
       apiPost<IncidentUpdate>(`/incidents/${incidentId}/updates`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['incidentUpdates', incidentId] }),
   });

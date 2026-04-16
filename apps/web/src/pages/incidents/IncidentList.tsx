@@ -67,17 +67,7 @@ export function IncidentList() {
       <PageHeader
         title="Incidents"
         subtitle={`${total} record${total !== 1 ? 's' : ''}`}
-        actions={
-          isEngineer ? (
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => navigate('/incidents/new')}
-            >
-              <i className="bi bi-plus-lg me-1" />
-              New Incident
-            </button>
-          ) : undefined
-        }
+        actions={undefined}
       />
 
       {/* Filters */}
@@ -90,7 +80,7 @@ export function IncidentList() {
         >
           <option value="">All statuses</option>
           <option value="open">Open</option>
-          <option value="investigating">Investigating</option>
+          <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>

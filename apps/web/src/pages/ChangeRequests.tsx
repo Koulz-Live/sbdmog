@@ -80,7 +80,6 @@ export function ChangeRequests() {
           columns={COLUMNS}
           data={crs}
           rowKey={(r) => r.id}
-          onRowClick={(r) => navigate(`/change-requests/${r.id}`)}
         />
       )}
     </div>

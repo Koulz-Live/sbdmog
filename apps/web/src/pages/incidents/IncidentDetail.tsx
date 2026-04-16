@@ -38,8 +38,8 @@ export function IncidentDetail() {
   if (!incident) return null;
 
   const handleAddUpdate = async () => {
-    if (!updateText.trim() || !user) return;
-    await addUpdate.mutateAsync({ update_text: updateText.trim(), updated_by: user.id });
+    if (!updateText.trim()) return;
+    await addUpdate.mutateAsync({ content: updateText.trim() });
     setUpdateText('');
   };
 
