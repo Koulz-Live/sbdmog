@@ -6,6 +6,7 @@
 
 import { Router } from 'express';
 import type { Request, Response } from 'express';
+import { adminClient } from '@heqcis/supabase';
 import { insertAuditLog } from '../lib/auditHelper.js';
 
 export const userActivityRouter = Router();
@@ -37,6 +38,15 @@ userActivityRouter.post('/', async (req: Request, res: Response) => {
       ...(metadata ?? {}),
     },
   });
+
+  // Update last_login_at on successful login
+  if (event === 'login' && user_id) {
+    void adminClient
+      .from('profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', user_id)
+      .then(() => {/* no-op */});
+  }
 
   res.status(202).json({ ok: true });
 });

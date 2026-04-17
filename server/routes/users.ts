@@ -1,5 +1,6 @@
 // server/routes/users.ts
-// Admin-only user management: list, update role/dept, invite, deactivate/reactivate.
+// Admin-only user management: list, export, update role/dept, invite,
+// deactivate/reactivate, password reset, activity timeline.
 // Uses Supabase Auth Admin API for user creation + the profiles table for metadata.
 
 import { Router } from 'express';
@@ -12,9 +13,15 @@ import type { AuthenticatedRequest } from '../middleware/auth.js';
 export const usersRouter = Router();
 
 const ROLES = ['admin', 'engineer', 'analyst', 'viewer'] as const;
+const SORTABLE_COLS = ['full_name', 'role', 'created_at', 'last_login_at'] as const;
+type SortableCol = typeof SORTABLE_COLS[number];
+function isSortable(col: string): col is SortableCol {
+  return (SORTABLE_COLS as readonly string[]).includes(col);
+}
 
 // ── GET /users  ──────────────────────────────────────────────────────────────
 // Lists all profiles with optional filters: role, department, is_active, search
+// Supports: order_by, order_dir, limit, offset
 usersRouter.get('/', requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const {
@@ -22,14 +29,19 @@ usersRouter.get('/', requireRole('admin'), async (req: Request, res: Response) =
       department,
       is_active,
       search,
-      limit  = '100',
-      offset = '0',
+      limit     = '25',
+      offset    = '0',
+      order_by  = 'created_at',
+      order_dir = 'desc',
     } = req.query as Record<string, string>;
+
+    const safeOrderBy = isSortable(order_by) ? order_by : 'created_at';
+    const ascending   = order_dir === 'asc';
 
     let q = adminClient
       .from('profiles')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
+      .order(safeOrderBy, { ascending });
 
     if (role)       q = q.eq('role', role);
     if (department) q = q.eq('department', department);
@@ -45,6 +57,46 @@ usersRouter.get('/', requireRole('admin'), async (req: Request, res: Response) =
   } catch (err) {
     console.error('[users:list]', err);
     res.status(500).json({ error: 'Failed to fetch users.' });
+  }
+});
+
+// ── GET /users/export  ───────────────────────────────────────────────────────
+// CSV export — must come BEFORE /:id to avoid route shadowing
+usersRouter.get('/export', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { role, department, is_active, search } = req.query as Record<string, string>;
+
+    let q = adminClient
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (role)       q = q.eq('role', role);
+    if (department) q = q.eq('department', department);
+    if (is_active !== undefined) q = q.eq('is_active', is_active !== 'false');
+    if (search)     q = q.ilike('full_name', `%${search}%`);
+
+    const { data, error } = await q;
+    if (error) throw error;
+
+    const escape = (v: unknown) => {
+      const s = String(v ?? '');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = 'id,full_name,role,department,is_active,phone,created_at,last_login_at\n';
+    const rows = (data ?? []).map((u) =>
+      [u['id'], u['full_name'], u['role'], u['department'], u['is_active'], u['phone'], u['created_at'], u['last_login_at']]
+        .map(escape).join(',')
+    ).join('\n');
+
+    const filename = `users-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(header + rows);
+  } catch (err) {
+    console.error('[users:export]', err);
+    res.status(500).json({ error: 'Failed to export users.' });
   }
 });
 
@@ -126,7 +178,70 @@ usersRouter.patch('/:id', requireRole('admin'), async (req: Request, res: Respon
   }
 });
 
-// ── POST /users/invite  ──────────────────────────────────────────────────────
+// ── GET /users/:id/activity  ─────────────────────────────────────────────────
+// Returns recent audit log entries where the user is the actor or the subject
+usersRouter.get('/:id/activity', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params as { id: string };
+
+    const { data, error } = await adminClient
+      .from('audit_logs')
+      .select('id, action, resource_type, resource_id, created_at, metadata')
+      .or(`actor_id.eq.${id},resource_id.eq.${id}`)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    res.json({ data: data ?? [] });
+  } catch (err) {
+    console.error('[users:activity]', err);
+    res.status(500).json({ error: 'Failed to fetch user activity.' });
+  }
+});
+
+// ── POST /users/:id/reset-password  ─────────────────────────────────────────
+// Generates a Supabase recovery link and emails it to the user
+usersRouter.post('/:id/reset-password', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const authed = req as AuthenticatedRequest;
+    const { id } = req.params as { id: string };
+
+    // Fetch auth user to get email
+    const { data: authUser, error: authErr } = await adminClient.auth.admin.getUserById(id);
+    if (authErr || !authUser?.user?.email) {
+      res.status(404).json({ error: 'Auth account not found or has no email.' });
+      return;
+    }
+
+    const { error: linkErr } = await adminClient.auth.admin.generateLink({
+      type:  'recovery',
+      email: authUser.user.email,
+    });
+
+    if (linkErr) {
+      res.status(400).json({ error: linkErr.message });
+      return;
+    }
+
+    insertAuditLog({
+      actor_id:      authed.user.id,
+      action:        'update',
+      resource_type: 'profile',
+      resource_id:   id,
+      metadata:      { action: 'password_reset_sent', email: authUser.user.email },
+      ip_address:    req.ip ?? null,
+      user_agent:    req.headers['user-agent'] ?? null,
+    });
+
+    res.json({ ok: true, message: 'Password reset link generated and emailed to the user.' });
+  } catch (err) {
+    console.error('[users:reset-password]', err);
+    res.status(500).json({ error: 'Failed to generate password reset link.' });
+  }
+});
+
+// ── DELETE /users/:id  ───────────────────────────────────────────────────────
 // Invite a new user via Supabase Auth admin API + create their profile row.
 usersRouter.post('/invite', requireRole('admin'), async (req: Request, res: Response) => {
   try {
@@ -220,9 +335,10 @@ usersRouter.delete('/:id', requireRole('admin'), async (req: Request, res: Respo
     if (error) throw error;
     if (!data) { res.status(404).json({ error: 'User not found.' }); return; }
 
-    // Also disable login via Supabase Auth (best-effort)
-    // The profile is_active=false flag gates app access via AuthGuard immediately.
-    void adminClient.auth.admin.deleteUser(id).catch(() => {/* no-op if already absent */});
+    // NOTE: We intentionally do NOT call auth.admin.deleteUser() here.
+    // Soft deactivation via is_active=false is enough — AuthGuard blocks access.
+    // This preserves the auth account so the user can be reactivated without
+    // needing to re-invite them.
 
     insertAuditLog({
       actor_id:      authed.user.id,
