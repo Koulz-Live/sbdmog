@@ -26,6 +26,7 @@ import { auditLogsRouter }             from './routes/auditLogs.js';
 import { sqlStatsRouter }              from './routes/sqlStats.js';
 import { governanceInsightsRouter }    from './routes/governanceInsights.js';
 import { userActivityRouter }          from './routes/userActivity.js';
+import { usersRouter }                 from './routes/users.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
@@ -79,6 +80,7 @@ app.use('/api/handover-items',        handoverItemsRouter);
 app.use('/api/audit-logs',            auditLogsRouter);
 app.use('/api/sql-stats',             sqlStatsRouter);
 app.use('/api/governance-insights',   governanceInsightsRouter);
+app.use('/api/users',                 usersRouter);
 
 // ── 404 catch-all ─────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

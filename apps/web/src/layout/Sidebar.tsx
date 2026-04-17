@@ -61,7 +61,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     heading: 'Admin',
     items: [
-      { to: '/audit-logs', icon: 'bi-journal-text', label: 'Audit Logs', adminOnly: true },
+      { to: '/audit-logs',      icon: 'bi-journal-text',       label: 'Audit Logs',       adminOnly: true },
+      { to: '/user-management', icon: 'bi-people-fill',        label: 'User Management',  adminOnly: true },
     ],
   },
 ];
