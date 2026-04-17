@@ -5,6 +5,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { adminClient } from '@heqcis/supabase';
 import type { Profile } from '@heqcis/types';
+import { insertAuditLog } from '../lib/auditHelper.js';
 
 export interface AuthenticatedRequest extends Request {
   user: Profile;
@@ -27,6 +28,13 @@ export async function authMiddleware(
   // Verify the JWT via Supabase Auth
   const { data: { user }, error } = await adminClient.auth.getUser(token);
   if (error || !user) {
+    insertAuditLog({
+      action:        'login_failed',
+      resource_type: 'user_session',
+      ip_address:    req.ip ?? null,
+      user_agent:    req.headers['user-agent'] ?? null,
+      metadata:      { reason: 'invalid_or_expired_token', path: req.path },
+    });
     res.status(401).json({ error: 'Invalid or expired token.' });
     return;
   }

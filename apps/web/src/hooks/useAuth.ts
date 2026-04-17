@@ -3,6 +3,7 @@
 
 import { useAuthStore } from '../store/auth.store.js';
 import { supabase } from '../services/supabase.js';
+import { logUserActivity } from '../services/activityLogger.js';
 import { useNavigate } from 'react-router-dom';
 
 export function useAuth() {
@@ -16,6 +17,9 @@ export function useAuth() {
   const isAnalyst  = role === 'analyst'  || role === 'admin';
 
   const signOut = async () => {
+    logUserActivity('logout', {
+      user_id: user?.id,
+    });
     await supabase.auth.signOut();
     useAuthStore.getState().clearAuth();
     navigate('/login', { replace: true });

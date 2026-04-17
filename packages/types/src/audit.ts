@@ -1,6 +1,8 @@
 // packages/types/src/audit.ts
 
-export type AuditAction = 'create' | 'update' | 'delete' | 'approve' | 'view';
+export type AuditAction =
+  | 'create' | 'update' | 'delete' | 'approve' | 'view'
+  | 'login'  | 'logout' | 'login_failed';
 
 export interface AuditLog {
   id: string;

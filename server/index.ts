@@ -25,6 +25,7 @@ import { handoverItemsRouter }         from './routes/handoverItems.js';
 import { auditLogsRouter }             from './routes/auditLogs.js';
 import { sqlStatsRouter }              from './routes/sqlStats.js';
 import { governanceInsightsRouter }    from './routes/governanceInsights.js';
+import { userActivityRouter }          from './routes/userActivity.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
@@ -53,6 +54,9 @@ app.get('/readiness', (_req, res) => res.json({ status: 'ready' }));
 app.post('/webhooks/backup-results',    handleBackupResults);
 app.post('/webhooks/etl-results',       handleEtlResults);
 app.post('/webhooks/sql-check-results', handleSqlCheckResults);
+
+// ── Unauthenticated activity endpoint (user session events) ──────────────────
+app.use('/activity/user', userActivityRouter);
 
 // ── Authenticated API routes ──────────────────────────────────────────────────
 // All routes below require a valid Supabase JWT in Authorization: Bearer <token>

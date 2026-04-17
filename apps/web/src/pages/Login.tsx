@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase.js';
 import { useAuthStore } from '../store/auth.store.js';
+import { logUserActivity } from '../services/activityLogger.js';
 import type { Profile } from '@heqcis/types';
 
 export function Login() {
@@ -28,6 +29,10 @@ export function Login() {
 
       if (authError) {
         setError(authError.message);
+        logUserActivity('login_failed', {
+          email:    email.trim(),
+          metadata: { reason: authError.message },
+        });
         return;
       }
 
@@ -50,6 +55,10 @@ export function Login() {
       }
 
       setAuth(profile as Profile, data.session.access_token);
+      logUserActivity('login', {
+        user_id: data.session.user.id,
+        email:   email.trim(),
+      });
       navigate('/dashboard', { replace: true });
     } finally {
       setLoading(false);

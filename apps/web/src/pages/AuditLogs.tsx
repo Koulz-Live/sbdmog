@@ -32,27 +32,33 @@ interface ListResponse {
 const PAGE_SIZES = [25, 50, 100];
 
 const ACTION_META: Record<string, { cls: string; icon: string }> = {
-  create:  { cls: 'bg-success',          icon: 'bi-plus-circle-fill' },
-  update:  { cls: 'bg-warning text-dark', icon: 'bi-pencil-fill' },
-  delete:  { cls: 'bg-danger',           icon: 'bi-trash-fill' },
-  approve: { cls: 'bg-primary',          icon: 'bi-check-circle-fill' },
-  view:    { cls: 'bg-secondary',        icon: 'bi-eye-fill' },
+  create:       { cls: 'bg-success',           icon: 'bi-plus-circle-fill' },
+  update:       { cls: 'bg-warning text-dark',  icon: 'bi-pencil-fill' },
+  delete:       { cls: 'bg-danger',             icon: 'bi-trash-fill' },
+  approve:      { cls: 'bg-primary',            icon: 'bi-check-circle-fill' },
+  view:         { cls: 'bg-secondary',          icon: 'bi-eye-fill' },
+  login:        { cls: 'bg-info text-dark',     icon: 'bi-box-arrow-in-right' },
+  logout:       { cls: 'bg-dark',               icon: 'bi-box-arrow-right' },
+  login_failed: { cls: 'bg-danger',             icon: 'bi-shield-x' },
 };
 
 const RESOURCE_ICONS: Record<string, string> = {
-  incident:            'bi-exclamation-triangle',
-  backup_run:          'bi-cloud-upload',
-  etl_run:             'bi-arrow-repeat',
-  change_request:      'bi-arrow-left-right',
-  monthly_report:      'bi-calendar3',
-  security_finding:    'bi-shield-exclamation',
-  popia_event:         'bi-person-lock',
-  document:            'bi-folder2-open',
-  handover_item:       'bi-box-arrow-in-right',
-  submission_readiness:'bi-check2-circle',
+  incident:             'bi-exclamation-triangle',
+  backup_run:           'bi-cloud-upload',
+  etl_run:              'bi-arrow-repeat',
+  change_request:       'bi-arrow-left-right',
+  monthly_report:       'bi-calendar3',
+  security_finding:     'bi-shield-exclamation',
+  popia_event:          'bi-person-lock',
+  document:             'bi-folder2-open',
+  handover_item:        'bi-box-arrow-in-right',
+  submission_readiness: 'bi-check2-circle',
+  user_session:         'bi-person-badge',
 };
 
-const KNOWN_RESOURCE_TYPES = Object.keys(RESOURCE_ICONS).concat(['profile', 'report_request', 'maintenance_activity']);
+const KNOWN_RESOURCE_TYPES = Object.keys(RESOURCE_ICONS).concat([
+  'profile', 'report_request', 'maintenance_activity', 'user_session',
+]);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function buildQS(filters: Filters, limit: number, offset: number) {
@@ -203,10 +209,10 @@ export function AuditLogs() {
   const totalPages = Math.ceil(total / pageSize);
 
   // KPI derivations
-  const uniqueActors   = new Set(logs.map((l) => l.actor_id).filter(Boolean)).size;
-  const actionCounts   = logs.reduce<Record<string, number>>((acc, l) => { acc[l.action] = (acc[l.action] ?? 0) + 1; return acc; }, {});
-  const topAction      = Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
-  const deleteCount    = actionCounts['delete'] ?? 0;
+  const uniqueActors    = new Set(logs.map((l) => l.actor_id).filter(Boolean)).size;
+  const actionCounts    = logs.reduce<Record<string, number>>((acc, l) => { acc[l.action] = (acc[l.action] ?? 0) + 1; return acc; }, {});
+  const loginCount      = actionCounts['login']        ?? 0;
+  const loginFailCount  = actionCounts['login_failed'] ?? 0;
 
   function applyFilters() { setFilters({ ...draft }); setPage(0); }
   function clearFilters() { setFilters(BLANK_FILTERS); setDraft(BLANK_FILTERS); setPage(0); }
@@ -255,10 +261,10 @@ export function AuditLogs() {
 
       {/* KPI Cards */}
       <div className="row g-3 mb-4">
-        <KpiCard icon="bi-journal-text"   label="Total (page)"    value={logs.length}    colour="primary" />
-        <KpiCard icon="bi-people"          label="Unique actors"   value={uniqueActors}   colour="info" />
-        <KpiCard icon="bi-lightning"       label="Top action"      value={topAction}      colour="warning" />
-        <KpiCard icon="bi-trash"           label="Delete events"   value={deleteCount}    colour="danger" />
+        <KpiCard icon="bi-journal-text"    label="Total (page)"    value={logs.length}   colour="primary" />
+        <KpiCard icon="bi-people"           label="Unique actors"   value={uniqueActors}  colour="info" />
+        <KpiCard icon="bi-box-arrow-in-right" label="Logins"        value={loginCount}    colour="success" />
+        <KpiCard icon="bi-shield-x"         label="Failed logins"   value={loginFailCount} colour="danger" />
       </div>
 
       {/* Filter panel */}
@@ -278,7 +284,7 @@ export function AuditLogs() {
             <select className="form-select form-select-sm" value={draft.action}
               onChange={(e) => setDraft((f) => ({ ...f, action: e.target.value }))}>
               <option value="">All actions</option>
-              {['create','update','delete','approve','view'].map((a) => (
+              {['create','update','delete','approve','view','login','logout','login_failed'].map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
