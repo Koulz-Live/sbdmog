@@ -38,7 +38,8 @@ export function Topbar({ onMenuToggle }: TopbarProps) {
         {user && (
           <>
             <span className={`badge ${roleBadgeClass} d-none d-sm-inline`}>{roleLabel}</span>
-            <span className="text-muted small fw-semibold d-none d-sm-inline">
+            <span className="text-muted small fw-semibold d-none d-sm-inline d-flex align-items-center gap-1">
+              <i className="bi bi-person-circle" />
               {user.full_name && user.full_name !== user.id
                 ? user.full_name
                 : (user as any).email ?? user.id.slice(0, 8)}
@@ -46,11 +47,11 @@ export function Topbar({ onMenuToggle }: TopbarProps) {
           </>
         )}
         <button
-          className="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
           onClick={signOut}
           title="Sign out"
         >
-          <i className="bi bi-box-arrow-right me-1" />
+          <i className="bi bi-box-arrow-right" />
           <span className="d-none d-sm-inline">Sign out</span>
         </button>
       </div>

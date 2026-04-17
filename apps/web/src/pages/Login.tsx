@@ -78,14 +78,15 @@ export function Login() {
               className="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
               style={{ width: 60, height: 60 }}
             >
-              <span className="text-white fw-bold fs-5">CHE</span>
+              <i className="bi bi-building-fill text-white fs-4" />
             </div>
             <h4 className="fw-bold mb-1">HEQCIS Operations Portal</h4>
             <p className="text-muted small">Council on Higher Education</p>
           </div>
 
           {error && (
-            <div className="alert alert-danger py-2 small" role="alert">
+            <div className="alert alert-danger py-2 small d-flex align-items-center gap-2" role="alert">
+              <i className="bi bi-exclamation-triangle-fill flex-shrink-0" />
               {error}
             </div>
           )}
@@ -95,41 +96,51 @@ export function Login() {
               <label htmlFor="email" className="form-label fw-semibold">
                 Email address
               </label>
-              <input
-                id="email"
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="you@che.ac.za"
-              />
+              <div className="input-group">
+                <span className="input-group-text bg-white">
+                  <i className="bi bi-envelope text-muted" />
+                </span>
+                <input
+                  id="email"
+                  type="email"
+                  className="form-control border-start-0"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="you@che.ac.za"
+                />
+              </div>
             </div>
 
             <div className="mb-4">
               <label htmlFor="password" className="form-label fw-semibold">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+              <div className="input-group">
+                <span className="input-group-text bg-white">
+                  <i className="bi bi-lock text-muted" />
+                </span>
+                <input
+                  id="password"
+                  type="password"
+                  className="form-control border-start-0"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              className="btn btn-primary w-100 fw-semibold"
+              className="btn btn-primary w-100 fw-semibold d-inline-flex align-items-center justify-content-center gap-2"
               disabled={loading}
             >
               {loading
-                ? <><span className="spinner-border spinner-border-sm me-2" />Signing in…</>
-                : 'Sign in'}
+                ? <><span className="spinner-border spinner-border-sm" />Signing in…</>
+                : <><i className="bi bi-box-arrow-in-right" />Sign in</>}
             </button>
           </form>
         </div>

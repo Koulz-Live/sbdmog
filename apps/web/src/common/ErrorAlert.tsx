@@ -21,7 +21,8 @@ export function ErrorAlert({ error, onRetry }: ErrorAlertProps) {
         {message}
       </span>
       {onRetry && (
-        <button className="btn btn-sm btn-outline-danger ms-3" onClick={onRetry}>
+        <button className="btn btn-sm btn-outline-danger ms-3 d-inline-flex align-items-center gap-1" onClick={onRetry}>
+          <i className="bi bi-arrow-clockwise" />
           Retry
         </button>
       )}
