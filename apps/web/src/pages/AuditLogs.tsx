@@ -338,7 +338,7 @@ export function AuditLogs() {
 
       {!isLoading && !error && logs.length === 0 && (
         <EmptyState icon="bi-journal-text" title="No audit log entries found"
-          description="Adjust your filters or wait for system activity to be recorded." />
+          message="Adjust your filters or wait for system activity to be recorded." />
       )}
 
       {logs.length > 0 && (
