@@ -6,6 +6,8 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { adminClient } from '@heqcis/supabase';
 import { getPool } from '../lib/azureSql.js';
+import { analyseEtlDataset } from '@heqcis/ai';
+import type { EtlAnalysisInput, FieldStat } from '@heqcis/ai';
 import type * as sql from 'mssql';
 
 export const etlUploadRouter = Router();
@@ -238,5 +240,108 @@ etlUploadRouter.post('/push-azure', async (req: Request, res: Response) => {
     }).eq('id', etlRunId);
 
     res.status(500).json({ error: 'Failed to push to Azure SQL.', detail: (err as Error).message });
+  }
+});
+
+// ── POST /api/etl-upload/analyse — AI conformance scoring ────────────────────
+// Accepts parsed rows + dataset metadata, computes field statistics,
+// calls OpenAI, and returns the conformance report.
+// Does NOT write to any database — analysis only.
+
+interface AnalyseBody {
+  job_name:      string;
+  dataset_label: string;
+  required_cols: string[];
+  optional_cols: string[];
+  headers:       string[];
+  rows:          Record<string, string>[];
+}
+
+etlUploadRouter.post('/analyse', async (req: Request, res: Response) => {
+  const { job_name, dataset_label, required_cols, optional_cols, headers, rows } =
+    req.body as AnalyseBody;
+
+  if (!job_name || !Array.isArray(rows) || rows.length === 0) {
+    res.status(400).json({ error: 'job_name and a non-empty rows array are required.' });
+    return;
+  }
+
+  // ── Compute field statistics ────────────────────────────────────────────
+  const allCols = [...(required_cols ?? []), ...(optional_cols ?? [])];
+
+  function suspectedType(samples: string[]): string {
+    const dateRx   = /^\d{4}-\d{2}-\d{2}|^\d{2}[\/\-]\d{2}[\/\-]\d{4}/;
+    const numberRx = /^-?\d+(\.\d+)?$/;
+    const boolRx   = /^(true|false|yes|no|1|0)$/i;
+    const enumMax  = 10; // if ≤ 10 distinct values, likely enum
+    const nonEmpty = samples.filter(Boolean);
+    if (nonEmpty.length === 0) return 'unknown';
+    if (nonEmpty.every((v) => numberRx.test(v.trim()))) return 'number';
+    if (nonEmpty.every((v) => boolRx.test(v.trim()))) return 'boolean';
+    if (nonEmpty.every((v) => dateRx.test(v.trim()))) return 'date';
+    const unique = new Set(nonEmpty.map((v) => v.toLowerCase().trim())).size;
+    if (unique <= enumMax && nonEmpty.length > enumMax) return 'enum';
+    return 'text';
+  }
+
+  const field_stats: FieldStat[] = allCols.map((field) => {
+    const values    = rows.map((r) => r[field] ?? '');
+    const nonEmpty  = values.filter((v) => v.trim() !== '');
+    const uniqueSet = new Set(nonEmpty.map((v) => v.trim().toLowerCase()));
+    const sampleSet = [...uniqueSet].slice(0, 10);
+
+    return {
+      field,
+      required:      (required_cols ?? []).includes(field),
+      present:       headers.includes(field),
+      non_empty_pct: rows.length > 0 ? (nonEmpty.length / rows.length) * 100 : 0,
+      unique_count:  uniqueSet.size,
+      sample_values: sampleSet,
+      has_nulls:     nonEmpty.length < rows.length,
+      suspected_type: suspectedType(nonEmpty.slice(0, 50)),
+    };
+  });
+
+  // Also include stats for any headers not in the schema (unknown cols)
+  const unknownHeaders = headers.filter((h) => !allCols.includes(h));
+  for (const field of unknownHeaders) {
+    const values    = rows.map((r) => r[field] ?? '');
+    const nonEmpty  = values.filter((v) => v.trim() !== '');
+    const uniqueSet = new Set(nonEmpty.map((v) => v.trim().toLowerCase()));
+    field_stats.push({
+      field,
+      required:      false,
+      present:       true,
+      non_empty_pct: rows.length > 0 ? (nonEmpty.length / rows.length) * 100 : 0,
+      unique_count:  uniqueSet.size,
+      sample_values: [...uniqueSet].slice(0, 10),
+      has_nulls:     nonEmpty.length < rows.length,
+      suspected_type: suspectedType(nonEmpty.slice(0, 50)),
+    });
+  }
+
+  const input: EtlAnalysisInput = {
+    job_name,
+    dataset_label,
+    required_cols: required_cols ?? [],
+    optional_cols: optional_cols ?? [],
+    headers,
+    row_count:    rows.length,
+    sample_rows:  rows.slice(0, 50),
+    field_stats,
+  };
+
+  try {
+    const result = await analyseEtlDataset(input);
+    res.json({
+      output:            result.output,
+      model:             result.model,
+      prompt_tokens:     result.prompt_tokens,
+      completion_tokens: result.completion_tokens,
+      field_stats,
+    });
+  } catch (err) {
+    console.error('[etlUpload:analyse]', err);
+    res.status(500).json({ error: 'AI analysis failed.', detail: (err as Error).message });
   }
 });

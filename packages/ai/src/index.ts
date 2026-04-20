@@ -10,3 +10,5 @@ export * from './prompts/monthlyReportDraft.js';
 export * from './prompts/documentationAssist.js';
 export * from './prompts/governanceInsights.js';
 export * from './services/governanceInsights.js';
+export * from './prompts/etlAnalysis.js';
+export * from './services/etlAnalysis.js';
