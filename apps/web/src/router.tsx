@@ -31,6 +31,7 @@ const HandoverItems      = lazy(() => import('./pages/HandoverItems.js').then((m
 const AuditLogs          = lazy(() => import('./pages/AuditLogs.js').then((m) => ({ default: m.AuditLogs })));
 const GovernanceInsights = lazy(() => import('./pages/GovernanceInsights.js').then((m) => ({ default: m.GovernanceInsights })));
 const UserManagement     = lazy(() => import('./pages/UserManagement.js').then((m) => ({ default: m.UserManagement })));
+const EtlUpload          = lazy(() => import('./pages/EtlUpload.js').then((m) => ({ default: m.EtlUpload })));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
           { path: 'audit-logs',           element: <SuspenseWrapper><AuditLogs /></SuspenseWrapper> },
           { path: 'governance-insights',  element: <SuspenseWrapper><GovernanceInsights /></SuspenseWrapper> },
           { path: 'user-management',      element: <SuspenseWrapper><UserManagement /></SuspenseWrapper> },
+          { path: 'etl-upload',           element: <SuspenseWrapper><EtlUpload /></SuspenseWrapper> },
         ],
       },
     ],
