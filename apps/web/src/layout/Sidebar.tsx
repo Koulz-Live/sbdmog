@@ -32,6 +32,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: '/backup-runs',       icon: 'bi-cloud-upload',   label: 'Backup Runs' },
       { to: '/etl-runs',          icon: 'bi-arrow-repeat',   label: 'ETL Runs' },
       { to: '/etl-upload',        icon: 'bi-file-earmark-spreadsheet', label: 'ETL Upload' },
+      { to: '/sql-etl-upload',    icon: 'bi-database-fill-up', label: 'SQL ETL Upload' },
       { to: '/maintenance',       icon: 'bi-tools',          label: 'Maintenance' },
     ],
   },
