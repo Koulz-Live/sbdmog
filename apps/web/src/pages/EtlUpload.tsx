@@ -7,12 +7,12 @@
 // 5. "Save to Supabase" → POST /api/etl-upload → inserts rows + creates etl_run
 // 6. "Load to Azure SQL" → POST /api/etl-upload/push-azure → Azure SQL insert + etl_run
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Papa from 'papaparse';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader }   from '../layout/PageHeader.js';
 import { SectionCard }  from '../common/SectionCard.js';
-import { apiPost }      from '../services/api.js';
+import { apiPost, apiGet } from '../services/api.js';
 
 // ── Dataset definitions ───────────────────────────────────────────────────────
 
@@ -238,6 +238,18 @@ export function EtlUpload() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
 
+  // SQL connection selection
+  const [sqlConnections, setSqlConnections]     = useState<{ id: string; label: string; connection_type: string; is_default: boolean }[]>([]);
+  const [selectedConnId, setSelectedConnId]     = useState<string>('');  // '' = use env default
+
+  // ── Load active SQL connections for picker ──────────────────────────────
+
+  useEffect(() => {
+    apiGet<{ connections: { id: string; label: string; connection_type: string; is_default: boolean }[] }>('/sql-connections')
+      .then((res) => setSqlConnections(res.connections ?? []))
+      .catch(() => {}); // silently ignore — falls back to env default
+  }, []);
+
   // ── Parse a File object ──────────────────────────────────────────────────
 
   const parseFile = useCallback((file: File, dataset: DatasetDef) => {
@@ -375,8 +387,9 @@ export function EtlUpload() {
     setPushError(null);
     try {
       const result = await apiPost<UploadResult>('/etl-upload/push-azure', {
-        job_name: selectedJob.job_name,
-        rows:     parsed.rows,
+        job_name:      selectedJob.job_name,
+        rows:          parsed.rows,
+        connection_id: selectedConnId || undefined,
       });
       setPushResult(result);
       setStage('pushed');
@@ -910,6 +923,32 @@ export function EtlUpload() {
                         <i className="bi bi-x-circle-fill me-1" />{pushError}
                       </div>
                     )}
+
+                    {/* Connection target selector */}
+                    <div className="mb-3">
+                      <label className="form-label small fw-semibold mb-1">Target SQL Connection</label>
+                      <select
+                        className="form-select form-select-sm font-monospace"
+                        value={selectedConnId}
+                        onChange={(e) => setSelectedConnId(e.target.value)}
+                        disabled={pushing || !!pushResult}
+                      >
+                        <option value="">Default (environment)</option>
+                        {sqlConnections.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.connection_type === 'azure_sql' ? '☁ ' : '🖥 '}
+                            {c.label}{c.is_default ? ' ★' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {sqlConnections.length === 0 && (
+                        <div className="form-text text-muted">
+                          <i className="bi bi-info-circle me-1" />
+                          Using env-var default.{' '}
+                          <a href="/sql-connections">Manage connections →</a>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="mt-auto d-flex gap-2">
                       <button

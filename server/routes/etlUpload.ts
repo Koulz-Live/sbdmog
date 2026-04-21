@@ -6,6 +6,8 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { adminClient } from '@heqcis/supabase';
 import { getPool } from '../lib/azureSql.js';
+import { getPoolForConnection } from '../lib/sqlPool.js';
+import type { SqlConnectionRecord } from '../lib/sqlPool.js';
 import { analyseEtlDataset } from '@heqcis/ai';
 import type { EtlAnalysisInput, FieldStat } from '@heqcis/ai';
 import type * as sql from 'mssql';
@@ -23,6 +25,7 @@ const ALLOWED_TABLES: Record<string, string> = {
   change_requests:         'change_requests',
   handover_items:          'handover_items',
   submission_readiness:    'submission_readiness',
+  umalusi_matric_results:  'umalusi_matric_results',
 };
 
 // ── Columns allowed per table (whitelist to prevent injection) ────────────────
@@ -35,6 +38,13 @@ const ALLOWED_COLUMNS: Record<string, string[]> = {
   change_requests:        ['title','change_type','requested_by','target_date','justification','risk_level','status'],
   handover_items:         ['title','category','priority','assigned_to','due_date','notes','status'],
   submission_readiness:   ['dataset_name','period','status','notes'],
+  umalusi_matric_results: [
+    'candidate_number','surname','first_name','id_number','school_emis','school_name',
+    'province','district','examination_year','subject_code','subject_name','mark','symbol',
+    'result_status','gender','date_of_birth','home_language','qualification_type',
+    'aggregate_mark','distinction_count','certificate_type','endorsed','special_needs',
+    'centre_number','remarks',
+  ],
 };
 
 // ── Azure SQL table mapping ───────────────────────────────────────────────────
@@ -47,6 +57,7 @@ const AZURE_SQL_TABLE: Record<string, string> = {
   change_requests:        'dbo.ChangeRequests',
   handover_items:         'dbo.HandoverItems',
   submission_readiness:   'dbo.SubmissionReadiness',
+  umalusi_matric_results: 'dbo.UmalusiMatricResults',
 };
 
 interface UploadBody {
@@ -140,13 +151,13 @@ etlUploadRouter.post('/', async (req: Request, res: Response) => {
   });
 });
 
-// ── POST /api/etl-upload/push-azure — push Supabase rows to Azure SQL ─────────
+// ── POST /api/etl-upload/push-azure — push CSV rows to any configured SQL Server ──
 etlUploadRouter.post('/push-azure', async (req: Request, res: Response) => {
-  const { job_name, rows } = req.body as UploadBody;
+  const { job_name, rows, connection_id } = req.body as UploadBody & { connection_id?: string };
 
   const azureTable = AZURE_SQL_TABLE[job_name];
   if (!azureTable) {
-    res.status(400).json({ error: `No Azure SQL mapping for job_name "${job_name}".` });
+    res.status(400).json({ error: `No SQL table mapping for job_name "${job_name}".` });
     return;
   }
 
@@ -157,15 +168,40 @@ etlUploadRouter.post('/push-azure', async (req: Request, res: Response) => {
 
   const allowedCols = ALLOWED_COLUMNS[job_name]!;
 
+  // ── Resolve which SQL pool to use ──────────────────────────────────────────
+  // If connection_id is provided, fetch the connection record from Supabase
+  // and build a pool from it. Otherwise fall back to the default env-var pool.
+  let resolvedPool: Awaited<ReturnType<typeof getPool>>;
+  let connectionLabel = 'Default (env)';
+
+  if (connection_id) {
+    const { data: connRecord, error: connErr } = await adminClient
+      .from('sql_connections')
+      .select('*')
+      .eq('id', connection_id)
+      .eq('is_active', true)
+      .single();
+
+    if (connErr || !connRecord) {
+      res.status(400).json({ error: `SQL connection "${connection_id}" not found or inactive.` });
+      return;
+    }
+
+    resolvedPool    = await getPoolForConnection(connRecord as unknown as SqlConnectionRecord);
+    connectionLabel = (connRecord as { label: string }).label;
+  } else {
+    resolvedPool = await getPool();
+  }
+
   // Create etl_run record
   const { data: runRecord, error: runCreateErr } = await adminClient
     .from('etl_runs')
     .insert({
-      job_name:      `${job_name}_azure_push`,
+      job_name:      `${job_name}_sql_push`,
       source:        'manual',
       status:        'running',
       started_at:    new Date().toISOString(),
-      pipeline_name: 'azure_sql_push',
+      pipeline_name: connectionLabel,
     })
     .select()
     .single();
@@ -179,7 +215,7 @@ etlUploadRouter.post('/push-azure', async (req: Request, res: Response) => {
   const etlRunId = runRecord.id as string;
 
   try {
-    const pool = await getPool();
+    const pool = resolvedPool;
 
     // Build parameterised bulk INSERT using table-valued approach (row by row)
     let rowsInserted = 0;

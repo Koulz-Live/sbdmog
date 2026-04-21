@@ -28,6 +28,7 @@ import { governanceInsightsRouter }    from './routes/governanceInsights.js';
 import { userActivityRouter }          from './routes/userActivity.js';
 import { usersRouter }                 from './routes/users.js';
 import { etlUploadRouter }             from './routes/etlUpload.js';
+import { sqlConnectionsRouter }        from './routes/sqlConnections.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
@@ -83,6 +84,7 @@ app.use('/api/sql-stats',             sqlStatsRouter);
 app.use('/api/governance-insights',   governanceInsightsRouter);
 app.use('/api/users',                 usersRouter);
 app.use('/api/etl-upload',            etlUploadRouter);
+app.use('/api/sql-connections',       sqlConnectionsRouter);
 
 // ── 404 catch-all ─────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

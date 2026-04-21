@@ -32,6 +32,7 @@ const AuditLogs          = lazy(() => import('./pages/AuditLogs.js').then((m) =>
 const GovernanceInsights = lazy(() => import('./pages/GovernanceInsights.js').then((m) => ({ default: m.GovernanceInsights })));
 const UserManagement     = lazy(() => import('./pages/UserManagement.js').then((m) => ({ default: m.UserManagement })));
 const EtlUpload          = lazy(() => import('./pages/EtlUpload.js').then((m) => ({ default: m.EtlUpload })));
+const SqlConnections     = lazy(() => import('./pages/SqlConnections.js').then((m) => ({ default: m.SqlConnections })));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
           { path: 'governance-insights',  element: <SuspenseWrapper><GovernanceInsights /></SuspenseWrapper> },
           { path: 'user-management',      element: <SuspenseWrapper><UserManagement /></SuspenseWrapper> },
           { path: 'etl-upload',           element: <SuspenseWrapper><EtlUpload /></SuspenseWrapper> },
+          { path: 'sql-connections',      element: <SuspenseWrapper><SqlConnections /></SuspenseWrapper> },
         ],
       },
     ],
