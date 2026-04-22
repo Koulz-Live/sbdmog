@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiGet } from '../services/api.js';
+import { apiGet, apiPost } from '../services/api.js';
 import { PageHeader } from '../layout/PageHeader.js';
 import { SectionCard } from '../common/SectionCard.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.js';
@@ -185,6 +185,11 @@ export function AuditLogs() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [aiLoading,   setAiLoading]   = useState(false);
+  const [aiAnalysis,  setAiAnalysis]  = useState<string | null>(null);
+  const [aiError,     setAiError]     = useState<string | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
   const offset = page * pageSize;
   const qs = buildQS(filters, pageSize, offset);
 
@@ -255,6 +260,26 @@ export function AuditLogs() {
             <button className="btn btn-sm btn-outline-primary" onClick={handleExport}>
               <i className="bi bi-download me-1" />CSV Export
             </button>
+            <button
+              className="btn btn-sm btn-outline-info"
+              disabled={aiLoading}
+              onClick={async () => {
+                setAiLoading(true); setAiError(null);
+                try {
+                  const res = await apiPost<{ data: { analysis: string; model: string; entries_analysed: number } }>('/audit-logs/ai-analyse', { days: 7 });
+                  setAiAnalysis(res.data.analysis);
+                  setShowAnalysis(true);
+                } catch (e: any) {
+                  setAiError(e?.message ?? 'AI analysis failed.');
+                } finally {
+                  setAiLoading(false);
+                }
+              }}
+            >
+              {aiLoading
+                ? <><span className="spinner-border spinner-border-sm me-1" />Analysing…</>
+                : <><i className="bi bi-stars me-1" />AI Analyse</>}
+            </button>
           </div>
         }
       />
@@ -266,6 +291,32 @@ export function AuditLogs() {
         <KpiCard icon="bi-box-arrow-in-right" label="Logins"        value={loginCount}    colour="success" />
         <KpiCard icon="bi-shield-x"         label="Failed logins"   value={loginFailCount} colour="danger" />
       </div>
+
+      {/* AI Analysis panel */}
+      {aiError && (
+        <div className="alert alert-danger alert-dismissible py-2 mb-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2" />{aiError}
+          <button type="button" className="btn-close" onClick={() => setAiError(null)} />
+        </div>
+      )}
+      {showAnalysis && aiAnalysis && (
+        <SectionCard
+          title="AI Governance Analysis"
+          className="mb-3 border-info"
+          action={
+            <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowAnalysis(false)}>
+              <i className="bi bi-x" /> Dismiss
+            </button>
+          }
+        >
+          <div className="text-muted small mb-2">
+            <i className="bi bi-stars me-1 text-info" />Analysis of the last 7 days of audit activity
+          </div>
+          <pre className="mb-0 small" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.7 }}>
+            {aiAnalysis}
+          </pre>
+        </SectionCard>
+      )}
 
       {/* Filter panel */}
       <SectionCard

@@ -7,6 +7,7 @@ import { requirePermission } from '../middleware/rbac.js';
 import type { AuthenticatedRequest } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { z } from 'zod';
+import { generateSecurityFindings } from '@heqcis/ai';
 
 export const securityFindingsRouter = Router();
 
@@ -65,5 +66,53 @@ securityFindingsRouter.patch('/:id', requirePermission('update', 'security_findi
     res.json({ data });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update finding.' });
+  }
+});
+
+// ── POST /security-findings/ai-generate ──────────────────────────────────────
+securityFindingsRouter.post('/ai-generate', requirePermission('create', 'security_findings'), async (req: Request, res: Response) => {
+  const authed = req as AuthenticatedRequest;
+  try {
+    // Gather operational context
+    const [incidentsRes, etlRes, backupsRes, existingRes] = await Promise.all([
+      adminClient.from('incidents').select('id', { count: 'exact', head: true }).in('status', ['open', 'investigating']),
+      adminClient.from('etl_runs').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
+      adminClient.from('backup_runs').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
+      adminClient.from('security_findings').select('title').eq('status', 'open').limit(20),
+    ]);
+
+    const result = await generateSecurityFindings({
+      recentIncidents: incidentsRes.count ?? 0,
+      failedEtlJobs:   etlRes.count ?? 0,
+      failedBackups:   backupsRes.count ?? 0,
+      existingOpenFindings: (existingRes.data ?? []).map((f: any) => f.title as string),
+    });
+
+    // Insert generated findings
+    const rows = result.findings.map(f => ({ ...f, created_by: authed.user.id }));
+    const { data: inserted, error: insertError } = await adminClient
+      .from('security_findings')
+      .insert(rows)
+      .select();
+    if (insertError) throw insertError;
+
+    // Log to ai_generations
+    await adminClient.from('ai_generations').insert({
+      resource_type:     'security_findings',
+      prompt_type:       'security_findings_generate',
+      prompt_tokens:     result.prompt_tokens,
+      completion_tokens: result.completion_tokens,
+      model:             result.model,
+      output:            result.output,
+      created_by:        authed.user.id,
+    });
+
+    res.status(201).json({
+      data: inserted,
+      ai: { model: result.model, prompt_tokens: result.prompt_tokens, completion_tokens: result.completion_tokens },
+    });
+  } catch (err) {
+    console.error('[securityFindings:ai-generate]', err);
+    res.status(500).json({ error: 'AI generation failed.' });
   }
 });

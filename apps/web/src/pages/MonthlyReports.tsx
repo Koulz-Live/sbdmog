@@ -1,9 +1,9 @@
 // apps/web/src/pages/MonthlyReports.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { apiGet } from '../services/api.js';
+import { apiGet, apiPost } from '../services/api.js';
 import { DataTable, type Column } from '../common/DataTable.js';
 import { StatusBadge } from '../common/StatusBadge.js';
 import { PageHeader } from '../layout/PageHeader.js';
@@ -40,6 +40,10 @@ const COLUMNS: Column<MonthlyReport>[] = [
 
 export function MonthlyReports() {
   const navigate = useNavigate();
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError,   setAiError]   = useState<string | null>(null);
+  const [period,    setPeriod]     = useState(() => new Date().toISOString().slice(0, 7));
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['monthlyReports'],
     queryFn:  () => apiGet<ListResponse>('/monthly-reports'),
@@ -52,11 +56,45 @@ export function MonthlyReports() {
     <div>
       <PageHeader title="Monthly Reports" subtitle={`${total} reports consistently maintained`} />
 
-      <div className="d-flex gap-2 mb-3">
+      <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
           <i className="bi bi-arrow-clockwise" />
         </button>
+        <input
+          type="month"
+          className="form-control form-control-sm"
+          style={{ maxWidth: 170 }}
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+        />
+        <button
+          className="btn btn-sm btn-outline-primary"
+          disabled={aiLoading || !period}
+          onClick={async () => {
+            setAiLoading(true); setAiError(null);
+            try {
+              const res = await apiPost<{ data: MonthlyReport; ai: { model: string } }>('/monthly-reports/ai-generate', { period });
+              await refetch();
+              navigate(`/monthly-reports/${res.data.id}`);
+            } catch (e: any) {
+              setAiError(e?.message ?? 'AI generation failed.');
+            } finally {
+              setAiLoading(false);
+            }
+          }}
+        >
+          {aiLoading
+            ? <><span className="spinner-border spinner-border-sm me-1" />Generating…</>
+            : <><i className="bi bi-stars me-1" />Generate Report</>}
+        </button>
       </div>
+
+      {aiError && (
+        <div className="alert alert-danger alert-dismissible py-2 mb-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2" />{aiError}
+          <button type="button" className="btn-close" onClick={() => setAiError(null)} />
+        </div>
+      )}
 
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}

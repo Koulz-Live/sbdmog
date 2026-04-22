@@ -7,6 +7,7 @@ import { requirePermission } from '../middleware/rbac.js';
 import { validateBody } from '../middleware/validate.js';
 import { z } from 'zod';
 import type { AuthenticatedRequest } from '../middleware/auth.js';
+import { generatePopiaEvents } from '@heqcis/ai';
 
 export const popiaEventsRouter = Router();
 
@@ -67,5 +68,50 @@ popiaEventsRouter.patch('/:id', requirePermission('update', 'popia_events'), val
     res.json({ data });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update POPIA event.' });
+  }
+});
+
+// ── POST /popia-events/ai-generate ───────────────────────────────────────────
+popiaEventsRouter.post('/ai-generate', requirePermission('create', 'popia_events'), async (req: Request, res: Response) => {
+  const authed = req as AuthenticatedRequest;
+  try {
+    const [etlRes, findingsRes] = await Promise.all([
+      adminClient.from('etl_runs').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+      adminClient.from('security_findings').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    ]);
+
+    const now = new Date();
+    const period = now.toLocaleString('en-ZA', { month: 'long', year: 'numeric' });
+
+    const result = await generatePopiaEvents({
+      recentEtlUploads:    etlRes.count ?? 0,
+      openSecurityFindings: findingsRes.count ?? 0,
+      period,
+    });
+
+    const rows = result.events.map(e => ({ ...e, reported_by: authed.user.id }));
+    const { data: inserted, error: insertError } = await adminClient
+      .from('popia_events')
+      .insert(rows)
+      .select();
+    if (insertError) throw insertError;
+
+    await adminClient.from('ai_generations').insert({
+      resource_type:     'popia_events',
+      prompt_type:       'popia_events_generate',
+      prompt_tokens:     result.prompt_tokens,
+      completion_tokens: result.completion_tokens,
+      model:             result.model,
+      output:            result.output,
+      created_by:        authed.user.id,
+    });
+
+    res.status(201).json({
+      data: inserted,
+      ai: { model: result.model, prompt_tokens: result.prompt_tokens, completion_tokens: result.completion_tokens },
+    });
+  } catch (err) {
+    console.error('[popiaEvents:ai-generate]', err);
+    res.status(500).json({ error: 'AI generation failed.' });
   }
 });

@@ -5,6 +5,8 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { adminClient } from '@heqcis/supabase';
 import { requireRole } from '../middleware/rbac.js';
+import type { AuthenticatedRequest } from '../middleware/auth.js';
+import { analyseAuditLogs } from '@heqcis/ai';
 
 export const auditLogsRouter = Router();
 
@@ -92,5 +94,51 @@ auditLogsRouter.get('/export', requireRole('admin'), async (req: Request, res: R
   } catch (err) {
     console.error('[auditLogs:export]', err);
     res.status(500).json({ error: 'Export failed.' });
+  }
+});
+
+// ── POST /audit-logs/ai-analyse ───────────────────────────────────────────────
+// Admin-only. Analyses recent audit log entries and returns a governance narrative.
+// Does NOT insert any audit log entries — read-only integrity preserved.
+auditLogsRouter.post('/ai-analyse', requireRole('admin'), async (req: Request, res: Response) => {
+  const authed = req as AuthenticatedRequest;
+  try {
+    const days = Number(req.body?.days ?? 7);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: entries, count, error } = await adminClient
+      .from('audit_logs')
+      .select('action, resource_type, created_at, metadata', { count: 'exact' })
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+
+    const result = await analyseAuditLogs({
+      entries: (entries ?? []).map((e: any) => ({
+        action:        e.action,
+        resource_type: e.resource_type,
+        created_at:    e.created_at,
+        metadata:      e.metadata,
+      })),
+      totalCount:        count ?? 0,
+      periodDescription: `last ${days} day${days !== 1 ? 's' : ''}`,
+    });
+
+    await adminClient.from('ai_generations').insert({
+      resource_type:     'audit_logs',
+      prompt_type:       'audit_logs_analyse',
+      prompt_tokens:     result.prompt_tokens,
+      completion_tokens: result.completion_tokens,
+      model:             result.model,
+      output:            result.output,
+      created_by:        authed.user.id,
+    });
+
+    res.json({ data: { analysis: result.output, model: result.model, entries_analysed: entries?.length ?? 0 } });
+  } catch (err) {
+    console.error('[auditLogs:ai-analyse]', err);
+    res.status(500).json({ error: 'AI analysis failed.' });
   }
 });
