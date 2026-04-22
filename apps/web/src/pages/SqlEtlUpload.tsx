@@ -246,7 +246,7 @@ export function SqlEtlUpload() {
 
       <PageHeader
         title="SQL ETL Upload"
-        subtitle="Extract from a SQL source, transform, and load into Supabase and / or a SQL destination"
+        subtitle="Extract from the source of truth, refine, and restore to your destinations"
         actions={
           stage !== 'config' ? (
             <button className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" onClick={reset}>
@@ -258,7 +258,7 @@ export function SqlEtlUpload() {
 
       {/* ── STEP 1 — Source & Query ─────────────────────────────────────────── */}
       <SectionCard
-        title="Step 1 — Source Connection & Query"
+        title="Step 1 — Appoint a Source"
         className="mb-3"
       >
         {connections.length === 0 ? (
@@ -348,7 +348,7 @@ export function SqlEtlUpload() {
       {/* ── STEP 2 — Preview ───────────────────────────────────────────────── */}
       {extracted && (
         <SectionCard
-          title={`Step 2 — Preview (${extracted.total_extracted.toLocaleString()} rows extracted)`}
+          title={`Step 2 — Examine the Record (${extracted.total_extracted.toLocaleString()} rows extracted)`}
           className="mb-3"
         >
           {extracted.truncated && (
@@ -391,7 +391,7 @@ export function SqlEtlUpload() {
       {/* ── STEP 3 — Targets ─────────────────────────────────────────────────── */}
       {extracted && (
         <SectionCard
-          title="Step 3 — Configure Load Targets"
+          title="Step 3 — Appoint Destinations"
           className="mb-3"
         >
           <div className="row g-4">
@@ -583,7 +583,7 @@ export function SqlEtlUpload() {
       {/* ── STEP 4 — Run & Results ─────────────────────────────────────────── */}
       {extracted && (
         <SectionCard
-          title="Step 4 — Load"
+          title="Step 4 — Commit &amp; Restore"
           className="mb-3"
         >
           {runError && (
@@ -652,11 +652,11 @@ export function SqlEtlUpload() {
               disabled={!canRun}
             >
               {stage === 'running' ? (
-                <><span className="spinner-border spinner-border-sm" role="status" />Loading…</>
+                <><span className="spinner-border spinner-border-sm" role="status" />Committing…</>
               ) : stage === 'done' ? (
-                <><i className="bi bi-check-circle-fill" />Loaded</>
+                <><i className="bi bi-check-circle-fill" />Committed</>
               ) : (
-                <><i className="bi bi-send-fill" />Load to Targets</>
+                <><i className="bi bi-send-fill" />Commit to Destinations</>
               )}
             </button>
 

@@ -163,7 +163,7 @@ function AzureSqlPanel({ stats, isLoading, error, refetch }: {
               className={`badge ${stats.connected ? 'bg-success' : 'bg-danger'} ms-1`}
               style={{ fontSize: '0.7rem' }}
             >
-              {stats.connected ? `Connected · ${stats.latency_ms} ms` : 'Disconnected'}
+              {stats.connected ? `Faithful · ${stats.latency_ms} ms` : 'Unreachable'}
             </span>
           )}
         </div>
@@ -175,13 +175,13 @@ function AzureSqlPanel({ stats, isLoading, error, refetch }: {
         )}
       </div>
 
-      {isLoading && <LoadingSpinner message="Querying Azure SQL…" size="sm" />}
+      {isLoading && <LoadingSpinner message="Querying the source…" size="sm" />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
 
       {stats && !stats.connected && (
         <div className="alert alert-warning d-flex align-items-center gap-2">
           <i className="bi bi-exclamation-triangle-fill" />
-          <span>Azure SQL is unreachable: {stats.error}</span>
+          <span>The source is unreachable: {stats.error}</span>
         </div>
       )}
 
@@ -232,16 +232,16 @@ export function Dashboard() {
     <div>
       <PageHeader
         title="Operations Dashboard"
-        subtitle="Live summary of all HEQCIS service health indicators"
+        subtitle="A faithful account of all HEQCIS service health indicators"
         actions={
           <button className="btn btn-sm btn-outline-secondary" onClick={handleRefresh}>
             <i className="bi bi-arrow-clockwise me-1" />
-            Refresh
+            Renew
           </button>
         }
       />
 
-      {isLoading && <LoadingSpinner message="Loading dashboard…" />}
+      {isLoading && <LoadingSpinner message="Gathering service data…" />}
       {error    && <ErrorAlert error={error} onRetry={refetch} />}
 
       {summary && (

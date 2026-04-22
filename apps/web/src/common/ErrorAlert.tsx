@@ -12,7 +12,7 @@ export function ErrorAlert({ error, onRetry }: ErrorAlertProps) {
   const message =
     error instanceof Error
       ? error.message
-      : 'An unexpected error occurred. Please try again.';
+      : 'Something needs attention — nothing is beyond recovery.';
 
   return (
     <div className="alert alert-danger d-flex align-items-center justify-content-between" role="alert">
@@ -23,7 +23,7 @@ export function ErrorAlert({ error, onRetry }: ErrorAlertProps) {
       {onRetry && (
         <button className="btn btn-sm btn-outline-danger ms-3 d-inline-flex align-items-center gap-1" onClick={onRetry}>
           <i className="bi bi-arrow-clockwise" />
-          Retry
+          Try Again
         </button>
       )}
     </div>

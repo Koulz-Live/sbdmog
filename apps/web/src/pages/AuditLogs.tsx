@@ -343,7 +343,7 @@ export function AuditLogs() {
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
 
       {!isLoading && !error && logs.length === 0 && (
-        <EmptyState icon="bi-journal-text" title="No audit log entries found"
+        <EmptyState icon="bi-journal-text" title="No entries on record"
           message="Adjust your filters or wait for system activity to be recorded." />
       )}
 

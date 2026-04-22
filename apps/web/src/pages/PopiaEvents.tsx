@@ -58,7 +58,7 @@ export function PopiaEvents() {
 
   return (
     <div>
-      <PageHeader title="POPIA Events" subtitle={`${total} records`} />
+      <PageHeader title="POPIA Events" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -81,7 +81,7 @@ export function PopiaEvents() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && events.length === 0 && (
-        <EmptyState icon="bi-person-lock" title="No POPIA events found" />
+        <EmptyState icon="bi-person-lock" title="No events recorded" message="The ledger is clean." />
       )}
       {events.length > 0 && (
         <DataTable columns={COLUMNS} data={events} rowKey={(r) => r.id} />

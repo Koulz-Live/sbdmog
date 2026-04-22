@@ -50,7 +50,7 @@ export function MonthlyReports() {
 
   return (
     <div>
-      <PageHeader title="Monthly Reports" subtitle={`${total} reports`} />
+      <PageHeader title="Monthly Reports" subtitle={`${total} reports faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
@@ -61,7 +61,7 @@ export function MonthlyReports() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && reports.length === 0 && (
-        <EmptyState icon="bi-calendar3" title="No monthly reports found" />
+        <EmptyState icon="bi-calendar3" title="No reports on record" />
       )}
       {reports.length > 0 && (
         <DataTable columns={COLUMNS} data={reports} rowKey={(r) => r.id}

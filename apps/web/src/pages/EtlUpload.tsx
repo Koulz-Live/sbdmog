@@ -432,7 +432,7 @@ export function EtlUpload() {
     <div>
       <PageHeader
         title="ETL Upload"
-        subtitle="Upload a CSV file, run AI conformance analysis, save to Supabase, and push to Azure SQL."
+        subtitle="Upload a CSV file, run AI conformance analysis, commit to Supabase, and restore to Azure SQL."
       />
 
       {/* ── Step indicator ─────────────────────────────────────── */}
@@ -441,8 +441,8 @@ export function EtlUpload() {
           { key: 'select',   label: '1  Select dataset',       icon: 'bi-list-ul' },
           { key: 'preview',  label: '2  Preview & validate',   icon: 'bi-table' },
           { key: 'analysed', label: '3  AI conformance check', icon: 'bi-stars' },
-          { key: 'saved',    label: '4  Saved to Supabase',    icon: 'bi-database-check' },
-          { key: 'pushed',   label: '5  Pushed to Azure SQL',  icon: 'bi-cloud-check' },
+          { key: 'saved',    label: '4  Committed to Supabase', icon: 'bi-database-check' },
+          { key: 'pushed',   label: '5  Restored to Azure SQL', icon: 'bi-cloud-check' },
         ].map((step, i, arr) => {
           const stepIdx = STAGE_KEYS.indexOf(step.key as Stage);
           const done    = stepIdx < currIdx;
@@ -849,7 +849,7 @@ export function EtlUpload() {
                     <div className="d-flex align-items-center gap-2 mb-2">
                       <i className="bi bi-database-fill-up fs-4 text-primary" />
                       <div>
-                        <div className="fw-semibold">Save to Supabase</div>
+                        <div className="fw-semibold">Commit to Supabase</div>
                         <div className="text-muted small">Inserts rows into the {selectedJob?.label} table</div>
                       </div>
                     </div>
@@ -879,11 +879,11 @@ export function EtlUpload() {
                         disabled={saving || !!saveResult}
                       >
                         {saving ? (
-                          <><span className="spinner-border spinner-border-sm" role="status" />Saving…</>
+                          <><span className="spinner-border spinner-border-sm" role="status" />Committing…</>
                         ) : saveResult ? (
-                          <><i className="bi bi-check-circle-fill" />Saved</>
+                          <><i className="bi bi-check-circle-fill" />Committed</>
                         ) : (
-                          <><i className="bi bi-database-fill-up" />Save to Supabase</>
+                          <><i className="bi bi-database-fill-up" />Commit to Supabase</>
                         )}
                       </button>
                       {saveResult && (
@@ -901,7 +901,7 @@ export function EtlUpload() {
                     <div className="d-flex align-items-center gap-2 mb-2">
                       <i className="bi bi-cloud-upload-fill fs-4 text-info" />
                       <div>
-                        <div className="fw-semibold">Load to Azure SQL</div>
+                        <div className="fw-semibold">Restore to Azure SQL</div>
                         <div className="text-muted small">Pushes rows to the Azure SQL data warehouse</div>
                       </div>
                     </div>
@@ -957,11 +957,11 @@ export function EtlUpload() {
                         disabled={pushing || !!pushResult}
                       >
                         {pushing ? (
-                          <><span className="spinner-border spinner-border-sm" role="status" />Pushing…</>
+                          <><span className="spinner-border spinner-border-sm" role="status" />Restoring…</>
                         ) : pushResult ? (
-                          <><i className="bi bi-check-circle-fill" />Pushed</>
+                          <><i className="bi bi-check-circle-fill" />Restored</>
                         ) : (
-                          <><i className="bi bi-cloud-upload-fill" />Load to Azure SQL</>
+                          <><i className="bi bi-cloud-upload-fill" />Restore to Azure SQL</>
                         )}
                       </button>
                       {pushResult && (
@@ -977,7 +977,7 @@ export function EtlUpload() {
               <div className="mt-3 text-muted small d-flex align-items-start gap-2">
                 <i className="bi bi-info-circle flex-shrink-0 mt-1" />
                 <span>
-                  Both actions are independent — you can save to Supabase, load to Azure SQL, or both.
+                  Both actions are independent — you can commit to Supabase, restore to Azure SQL, or both.
                   Each action creates a tracked <strong>ETL Run</strong> visible at{' '}
                   <button className="btn btn-link btn-sm p-0 align-baseline" onClick={() => navigate('/etl-runs')}>
                     /etl-runs

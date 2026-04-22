@@ -46,7 +46,7 @@ export function SubmissionReadiness() {
 
   return (
     <div>
-      <PageHeader title="Submission Readiness" subtitle={`${total} checks`} />
+      <PageHeader title="Submission Readiness" subtitle={`Walk in readiness — ${total} datasets accounted for`} />
 
       <div className="d-flex gap-2 mb-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
@@ -58,7 +58,7 @@ export function SubmissionReadiness() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && checks.length === 0 && (
-        <EmptyState icon="bi-check2-circle" title="No readiness checks found" />
+        <EmptyState icon="bi-check2-circle" title="No readiness checks on record" />
       )}
       {checks.length > 0 && (
         <DataTable columns={COLUMNS} data={checks} rowKey={(r) => r.id} />

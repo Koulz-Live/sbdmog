@@ -56,7 +56,7 @@ export function EtlRuns() {
 
   return (
     <div>
-      <PageHeader title="ETL Runs" subtitle={`${total} records`} />
+      <PageHeader title="ETL Runs" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -79,7 +79,7 @@ export function EtlRuns() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && runs.length === 0 && (
-        <EmptyState icon="bi-arrow-repeat" title="No ETL runs found" />
+        <EmptyState icon="bi-arrow-repeat" title="No runs recorded" message="Every journey begins with the first step." />
       )}
       {runs.length > 0 && (
         <DataTable columns={COLUMNS} data={runs} rowKey={(r) => r.id} />

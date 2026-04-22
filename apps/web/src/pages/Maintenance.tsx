@@ -51,7 +51,7 @@ export function Maintenance() {
 
   return (
     <div>
-      <PageHeader title="Maintenance Activities" subtitle={`${total} records`} />
+      <PageHeader title="Maintenance Activities" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -74,7 +74,7 @@ export function Maintenance() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && activities.length === 0 && (
-        <EmptyState icon="bi-tools" title="No maintenance activities found" />
+        <EmptyState icon="bi-tools" title="No activities recorded" />
       )}
       {activities.length > 0 && (
         <DataTable columns={COLUMNS} data={activities} rowKey={(r) => r.id} />

@@ -84,9 +84,9 @@ function typeBadge(type: 'azure_sql' | 'windows_sql') {
 }
 
 function testStatusBadge(status: 'success' | 'failed' | null, testedAt: string | null) {
-  if (!testedAt) return <span className="badge bg-light text-muted border">Not tested</span>;
+  if (!testedAt) return <span className="badge bg-light text-muted border">Not verified</span>;
   if (status === 'success')
-    return <span className="badge bg-success"><i className="bi bi-check-circle-fill me-1" />Connected</span>;
+    return <span className="badge bg-success"><i className="bi bi-check-circle-fill me-1" />Faithful</span>;
   return <span className="badge bg-danger"><i className="bi bi-x-circle-fill me-1" />Failed</span>;
 }
 
@@ -250,7 +250,7 @@ export function SqlConnections() {
     <div>
       <PageHeader
         title="SQL Connections"
-        subtitle="Manage named SQL Server connection profiles used as ETL push targets. Both Azure SQL and on-premises Windows SQL Server are supported."
+        subtitle="Manage the sources all data flows from. Both Azure SQL and on-premises SQL Server are supported."
         actions={
           isAdmin ? (
             <button className="btn btn-primary d-inline-flex align-items-center gap-2" onClick={openAdd}>
@@ -275,7 +275,7 @@ export function SqlConnections() {
         <div className="text-center py-5 text-muted">
           <i className="bi bi-plug display-4 mb-3 d-block" />
           <h5>No SQL connections configured</h5>
-          <p className="small">Add a connection profile to enable targeted ETL pushes beyond the default environment connection.</p>
+          <p className="small">Add a connection profile to appoint your sources and push targets.</p>
           {isAdmin && (
             <button className="btn btn-primary mt-2" onClick={openAdd}>
               <i className="bi bi-plus-circle-fill me-2" />Add First Connection
@@ -697,13 +697,13 @@ function ConnectionTable({
                           className="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1"
                           onClick={() => onTest(c.id)}
                           disabled={testingId === c.id}
-                          title="Test connectivity"
+                          title="Verify connectivity"
                         >
                           {testingId === c.id
                             ? <span className="spinner-border spinner-border-sm" role="status" />
                             : <i className="bi bi-lightning-fill" />
                           }
-                          {testingId === c.id ? '' : 'Test'}
+                          {testingId === c.id ? '' : 'Verify'}
                         </button>
                         <button
                           className="btn btn-sm btn-outline-secondary"

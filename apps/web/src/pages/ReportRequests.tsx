@@ -51,7 +51,7 @@ export function ReportRequests() {
 
   return (
     <div>
-      <PageHeader title="Report Requests" subtitle={`${total} records`} />
+      <PageHeader title="Report Requests" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -74,7 +74,7 @@ export function ReportRequests() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && reports.length === 0 && (
-        <EmptyState icon="bi-file-earmark-text" title="No report requests found" />
+        <EmptyState icon="bi-file-earmark-text" title="No requests recorded" />
       )}
       {reports.length > 0 && (
         <DataTable columns={COLUMNS} data={reports} rowKey={(r) => r.id} />

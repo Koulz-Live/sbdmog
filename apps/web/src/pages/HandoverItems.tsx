@@ -45,7 +45,7 @@ export function HandoverItems() {
 
   return (
     <div>
-      <PageHeader title="Handover Items" subtitle={`${total} records`} />
+      <PageHeader title="Handover Items" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -67,7 +67,7 @@ export function HandoverItems() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && items.length === 0 && (
-        <EmptyState icon="bi-box-arrow-in-right" title="No handover items found" />
+        <EmptyState icon="bi-box-arrow-in-right" title="No items recorded" />
       )}
       {items.length > 0 && (
         <DataTable columns={COLUMNS} data={items} rowKey={(r) => r.id} />

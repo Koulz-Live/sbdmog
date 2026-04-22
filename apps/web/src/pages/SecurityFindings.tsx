@@ -62,7 +62,7 @@ export function SecurityFindings() {
 
   return (
     <div>
-      <PageHeader title="Security Findings" subtitle={`${total} records`} />
+      <PageHeader title="Security Findings" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3 flex-wrap">
         <select
@@ -98,7 +98,7 @@ export function SecurityFindings() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && findings.length === 0 && (
-        <EmptyState icon="bi-shield-check" title="No security findings" />
+        <EmptyState icon="bi-shield-check" title="All clear — no findings on record" />
       )}
       {findings.length > 0 && (
         <DataTable columns={COLUMNS} data={findings} rowKey={(r) => r.id} />

@@ -9,7 +9,7 @@ interface LoadingSpinnerProps {
   inline?: boolean;
 }
 
-export function LoadingSpinner({ message = 'Loading…', size = 'md', inline = false }: LoadingSpinnerProps) {
+export function LoadingSpinner({ message = 'Gathering records…', size = 'md', inline = false }: LoadingSpinnerProps) {
   const spinnerClass = size === 'sm' ? 'spinner-border-sm' : '';
 
   if (inline) {

@@ -36,7 +36,7 @@ export function Documents() {
 
   return (
     <div>
-      <PageHeader title="Documents" subtitle={`${total} documents`} />
+      <PageHeader title="Documents" subtitle={`${total} documents faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>
@@ -47,7 +47,7 @@ export function Documents() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && docs.length === 0 && (
-        <EmptyState icon="bi-folder2-open" title="No documents found" />
+        <EmptyState icon="bi-folder2-open" title="No documents on record" />
       )}
       {docs.length > 0 && (
         <DataTable

@@ -48,7 +48,7 @@ export function ChangeRequests() {
 
   return (
     <div>
-      <PageHeader title="Change Requests" subtitle={`${total} records`} />
+      <PageHeader title="Change Requests" subtitle={`${total} records faithfully kept`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
@@ -73,7 +73,7 @@ export function ChangeRequests() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && crs.length === 0 && (
-        <EmptyState icon="bi-arrow-left-right" title="No change requests found" />
+        <EmptyState icon="bi-arrow-left-right" title="No requests recorded" />
       )}
       {crs.length > 0 && (
         <DataTable

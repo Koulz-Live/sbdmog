@@ -77,7 +77,7 @@ function BackupModal({ onClose, onSubmit, isPending }: BackupModalProps) {
 
           <div className="modal-body">
             <p className="text-muted mb-3" style={{ fontSize: '0.875rem' }}>
-              A backup run will be recorded in the HEQCIS Supabase log and written to{' '}
+              A faithful preservation record will be committed to the HEQCIS Supabase log and written to{' '}
               <code>dbo.backup_history</code> in Azure SQL.
             </p>
 
@@ -114,9 +114,9 @@ function BackupModal({ onClose, onSubmit, isPending }: BackupModalProps) {
                 ))}
               </div>
               <div className="form-text mt-2">
-                {backupType === 'full'         && 'Full backup — complete copy of the database.'}
-                {backupType === 'differential' && 'Differential — changes since the last full backup.'}
-                {backupType === 'log'          && 'Transaction log — recent log records only.'}
+                {backupType === 'full'         && 'Complete — the whole record, held in full.'}
+                {backupType === 'differential' && 'Incremental — changes since the last complete preservation.'}
+                {backupType === 'log'          && 'Transaction log — the latest record of every action.'}
               </div>
             </div>
           </div>
@@ -133,12 +133,12 @@ function BackupModal({ onClose, onSubmit, isPending }: BackupModalProps) {
               {isPending ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-                  Running…
+                  Preserving…
                 </>
               ) : (
                 <>
                   <i className="bi bi-play-fill me-1" />
-                  Run Backup
+                  Preserve Now
                 </>
               )}
             </button>
@@ -195,7 +195,7 @@ export function BackupRuns() {
     <div>
       <PageHeader
         title="Backup Runs"
-        subtitle={`${total} records`}
+        subtitle={`${total} records faithfully kept`}
         actions={
           <button
             className="btn btn-sm btn-primary"
@@ -237,7 +237,7 @@ export function BackupRuns() {
       {isLoading && <LoadingSpinner />}
       {error     && <ErrorAlert error={error} onRetry={refetch} />}
       {!isLoading && !error && runs.length === 0 && (
-        <EmptyState icon="bi-cloud-upload" title="No backup runs found" />
+        <EmptyState icon="bi-cloud-upload" title="No preservation runs recorded" message="Not one record will be lost — begin with the first preservation." />
       )}
       {runs.length > 0 && (
         <DataTable columns={COLUMNS} data={runs} rowKey={(r) => r.id} />
