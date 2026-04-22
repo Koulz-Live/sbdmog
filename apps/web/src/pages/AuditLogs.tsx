@@ -18,6 +18,9 @@ interface Filters {
   resource_type: string;
   actor_id:      string;
   resource_id:   string;
+  severity:      string;
+  http_method:   string;
+  search:        string;
   date_from:     string;
   date_to:       string;
 }
@@ -32,14 +35,38 @@ interface ListResponse {
 const PAGE_SIZES = [25, 50, 100];
 
 const ACTION_META: Record<string, { cls: string; icon: string }> = {
-  create:       { cls: 'bg-success',           icon: 'bi-plus-circle-fill' },
-  update:       { cls: 'bg-warning text-dark',  icon: 'bi-pencil-fill' },
-  delete:       { cls: 'bg-danger',             icon: 'bi-trash-fill' },
-  approve:      { cls: 'bg-primary',            icon: 'bi-check-circle-fill' },
-  view:         { cls: 'bg-secondary',          icon: 'bi-eye-fill' },
-  login:        { cls: 'bg-info text-dark',     icon: 'bi-box-arrow-in-right' },
-  logout:       { cls: 'bg-dark',               icon: 'bi-box-arrow-right' },
-  login_failed: { cls: 'bg-danger',             icon: 'bi-shield-x' },
+  create:           { cls: 'bg-success',            icon: 'bi-plus-circle-fill' },
+  update:           { cls: 'bg-warning text-dark',   icon: 'bi-pencil-fill' },
+  delete:           { cls: 'bg-danger',              icon: 'bi-trash-fill' },
+  approve:          { cls: 'bg-primary',             icon: 'bi-check-circle-fill' },
+  reject:           { cls: 'bg-danger',              icon: 'bi-x-circle-fill' },
+  publish:          { cls: 'bg-primary',             icon: 'bi-send-fill' },
+  view:             { cls: 'bg-secondary',           icon: 'bi-eye-fill' },
+  login:            { cls: 'bg-info text-dark',      icon: 'bi-box-arrow-in-right' },
+  logout:           { cls: 'bg-dark',                icon: 'bi-box-arrow-right' },
+  login_failed:     { cls: 'bg-danger',              icon: 'bi-shield-x' },
+  export:           { cls: 'bg-info text-dark',      icon: 'bi-download' },
+  upload:           { cls: 'bg-info text-dark',      icon: 'bi-upload' },
+  download:         { cls: 'bg-secondary',           icon: 'bi-file-earmark-arrow-down' },
+  search:           { cls: 'bg-secondary',           icon: 'bi-search' },
+  ai_generate:      { cls: 'bg-purple text-white',   icon: 'bi-stars' },
+  ai_analyse:       { cls: 'bg-purple text-white',   icon: 'bi-graph-up' },
+  permission_denied:{ cls: 'bg-danger',              icon: 'bi-shield-fill-exclamation' },
+  unauthenticated:  { cls: 'bg-danger',              icon: 'bi-lock-fill' },
+  role_change:      { cls: 'bg-warning text-dark',   icon: 'bi-person-gear' },
+  deactivate:       { cls: 'bg-danger',              icon: 'bi-person-dash-fill' },
+  reactivate:       { cls: 'bg-success',             icon: 'bi-person-check-fill' },
+  password_reset:   { cls: 'bg-warning text-dark',   icon: 'bi-key-fill' },
+  webhook_received: { cls: 'bg-secondary',           icon: 'bi-arrow-repeat' },
+  system_error:     { cls: 'bg-danger',              icon: 'bi-exclamation-octagon-fill' },
+};
+
+const SEVERITY_META: Record<string, { cls: string }> = {
+  info:     { cls: 'bg-secondary' },
+  low:      { cls: 'bg-info text-dark' },
+  medium:   { cls: 'bg-warning text-dark' },
+  high:     { cls: 'bg-danger' },
+  critical: { cls: 'bg-danger' },
 };
 
 const RESOURCE_ICONS: Record<string, string> = {
@@ -67,6 +94,9 @@ function buildQS(filters: Filters, limit: number, offset: number) {
   if (filters.resource_type) p.set('resource_type', filters.resource_type);
   if (filters.actor_id)      p.set('actor_id',      filters.actor_id);
   if (filters.resource_id)   p.set('resource_id',   filters.resource_id);
+  if (filters.severity)      p.set('severity',      filters.severity);
+  if (filters.http_method)   p.set('http_method',   filters.http_method);
+  if (filters.search)        p.set('search',        filters.search);
   if (filters.date_from)     p.set('date_from',     filters.date_from);
   if (filters.date_to)       p.set('date_to',       filters.date_to);
   p.set('limit',  String(limit));
@@ -80,6 +110,16 @@ function ActionBadge({ action }: { action: string }) {
     <span className={`badge ${meta.cls} d-inline-flex align-items-center gap-1`} style={{ fontSize: '0.72rem' }}>
       <i className={`bi ${meta.icon}`} style={{ fontSize: '0.65rem' }} />
       {action}
+    </span>
+  );
+}
+
+function SeverityBadge({ severity }: { severity?: string | null }) {
+  if (!severity) return null;
+  const meta = SEVERITY_META[severity] ?? { cls: 'bg-secondary' };
+  return (
+    <span className={`badge ${meta.cls}`} style={{ fontSize: '0.65rem' }}>
+      {severity}
     </span>
   );
 }
@@ -127,14 +167,18 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
 function DetailRow({ log }: { log: AuditLog }) {
   return (
     <tr className="table-active">
-      <td colSpan={7} className="px-4 py-3 bg-light border-start border-4 border-primary">
+      <td colSpan={8} className="px-4 py-3 bg-light border-start border-4 border-primary">
         <div className="row g-3">
           <div className="col-md-6">
             <table className="table table-sm table-borderless mb-0 small">
               <tbody>
                 <tr>
-                  <th className="text-muted pe-3 fw-semibold" style={{ width: 120, whiteSpace: 'nowrap' }}>Log ID</th>
+                  <th className="text-muted pe-3 fw-semibold" style={{ width: 130, whiteSpace: 'nowrap' }}>Log ID</th>
                   <td><code className="text-secondary">{log.id}</code></td>
+                </tr>
+                <tr>
+                  <th className="text-muted pe-3 fw-semibold">Request ID</th>
+                  <td><code className="text-secondary">{log.request_id ?? '—'}</code></td>
                 </tr>
                 <tr>
                   <th className="text-muted pe-3 fw-semibold">Actor ID</th>
@@ -145,12 +189,31 @@ function DetailRow({ log }: { log: AuditLog }) {
                   <td><code className="text-secondary">{log.resource_id ?? '—'}</code></td>
                 </tr>
                 <tr>
+                  <th className="text-muted pe-3 fw-semibold">Severity</th>
+                  <td><SeverityBadge severity={log.severity} /></td>
+                </tr>
+                <tr>
+                  <th className="text-muted pe-3 fw-semibold">HTTP</th>
+                  <td>
+                    {log.http_method && (
+                      <code className="text-secondary me-2">{log.http_method} {log.http_path}</code>
+                    )}
+                    {log.http_status && (
+                      <span className={`badge ${log.http_status >= 400 ? 'bg-danger' : 'bg-success'}`}>{log.http_status}</span>
+                    )}
+                  </td>
+                </tr>
+                <tr>
+                  <th className="text-muted pe-3 fw-semibold">Duration</th>
+                  <td>{log.duration_ms != null ? `${log.duration_ms} ms` : '—'}</td>
+                </tr>
+                <tr>
                   <th className="text-muted pe-3 fw-semibold">IP Address</th>
                   <td>{log.ip_address ?? '—'}</td>
                 </tr>
                 <tr>
                   <th className="text-muted pe-3 fw-semibold">User Agent</th>
-                  <td className="text-truncate" style={{ maxWidth: 300 }} title={log.user_agent ?? ''}>
+                  <td className="text-truncate" style={{ maxWidth: 280 }} title={log.user_agent ?? ''}>
                     {log.user_agent ?? '—'}
                   </td>
                 </tr>
@@ -160,11 +223,19 @@ function DetailRow({ log }: { log: AuditLog }) {
           <div className="col-md-6">
             <div className="fw-semibold text-muted small mb-1">Metadata</div>
             {log.metadata ? (
-              <pre className="bg-white border rounded p-2 small mb-0" style={{ maxHeight: 180, overflowY: 'auto', fontSize: '0.75rem' }}>
+              <pre className="bg-white border rounded p-2 small mb-0" style={{ maxHeight: 140, overflowY: 'auto', fontSize: '0.75rem' }}>
                 {JSON.stringify(log.metadata, null, 2)}
               </pre>
             ) : (
               <span className="text-muted small">No metadata</span>
+            )}
+            {log.changes && (
+              <>
+                <div className="fw-semibold text-muted small mt-2 mb-1">Changes (before → after)</div>
+                <pre className="bg-white border rounded p-2 small mb-0" style={{ maxHeight: 140, overflowY: 'auto', fontSize: '0.75rem' }}>
+                  {JSON.stringify(log.changes, null, 2)}
+                </pre>
+              </>
             )}
           </div>
         </div>
@@ -174,7 +245,7 @@ function DetailRow({ log }: { log: AuditLog }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-const BLANK_FILTERS: Filters = { action: '', resource_type: '', actor_id: '', resource_id: '', date_from: '', date_to: '' };
+const BLANK_FILTERS: Filters = { action: '', resource_type: '', actor_id: '', resource_id: '', severity: '', http_method: '', search: '', date_from: '', date_to: '' };
 
 export function AuditLogs() {
   const [filters, setFilters]     = useState<Filters>(BLANK_FILTERS);
@@ -213,11 +284,21 @@ export function AuditLogs() {
   const total = data?.count ?? 0;
   const totalPages = Math.ceil(total / pageSize);
 
-  // KPI derivations
-  const uniqueActors    = new Set(logs.map((l) => l.actor_id).filter(Boolean)).size;
+  // Stats from dedicated endpoint (last 24h)
+  const { data: statsData } = useQuery({
+    queryKey: ['auditStats'],
+    queryFn:  () => apiGet<{ data: { security_events: number; by_action: Record<string, number>; by_severity: Record<string, number>; unique_actors: number } }>('/audit-logs/stats?days=1'),
+    staleTime: 60_000,
+  });
+  const stats = statsData?.data;
+
+  // KPI derivations (page-level)
+  const uniqueActors    = stats?.unique_actors ?? new Set(logs.map((l) => l.actor_id).filter(Boolean)).size;
   const actionCounts    = logs.reduce<Record<string, number>>((acc, l) => { acc[l.action] = (acc[l.action] ?? 0) + 1; return acc; }, {});
-  const loginCount      = actionCounts['login']        ?? 0;
-  const loginFailCount  = actionCounts['login_failed'] ?? 0;
+  const loginCount      = stats?.by_action?.['login']        ?? actionCounts['login']        ?? 0;
+  const loginFailCount  = stats?.by_action?.['login_failed'] ?? actionCounts['login_failed'] ?? 0;
+  void loginFailCount; // available for future use
+  const securityEvents  = stats?.security_events ?? 0;
 
   function applyFilters() { setFilters({ ...draft }); setPage(0); }
   function clearFilters() { setFilters(BLANK_FILTERS); setDraft(BLANK_FILTERS); setPage(0); }
@@ -286,10 +367,10 @@ export function AuditLogs() {
 
       {/* KPI Cards */}
       <div className="row g-3 mb-4">
-        <KpiCard icon="bi-journal-text"    label="Total (page)"    value={logs.length}   colour="primary" />
-        <KpiCard icon="bi-people"           label="Unique actors"   value={uniqueActors}  colour="info" />
-        <KpiCard icon="bi-box-arrow-in-right" label="Logins"        value={loginCount}    colour="success" />
-        <KpiCard icon="bi-shield-x"         label="Failed logins"   value={loginFailCount} colour="danger" />
+        <KpiCard icon="bi-journal-text"       label="Total (24h)"       value={total}          colour="primary" />
+        <KpiCard icon="bi-people"             label="Unique actors (24h)" value={uniqueActors} colour="info" />
+        <KpiCard icon="bi-box-arrow-in-right" label="Logins (24h)"      value={loginCount}     colour="success" />
+        <KpiCard icon="bi-shield-exclamation" label="Risk events (24h)" value={securityEvents}  colour="danger" />
       </div>
 
       {/* AI Analysis panel */}
@@ -335,7 +416,7 @@ export function AuditLogs() {
             <select className="form-select form-select-sm" value={draft.action}
               onChange={(e) => setDraft((f) => ({ ...f, action: e.target.value }))}>
               <option value="">All actions</option>
-              {['create','update','delete','approve','view','login','logout','login_failed'].map((a) => (
+              {Object.keys(ACTION_META).map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
@@ -369,6 +450,31 @@ export function AuditLogs() {
             <label className="form-label small fw-semibold mb-1">Resource ID</label>
             <input type="text" className="form-control form-control-sm" placeholder="UUID…" value={draft.resource_id}
               onChange={(e) => setDraft((f) => ({ ...f, resource_id: e.target.value }))} />
+          </div>
+          <div className="col-6 col-md-3">
+            <label className="form-label small fw-semibold mb-1">Severity</label>
+            <select className="form-select form-select-sm" value={draft.severity}
+              onChange={(e) => setDraft((f) => ({ ...f, severity: e.target.value }))}>
+              <option value="">All severities</option>
+              {(['critical','high','medium','low','info'] as const).map((s) => (
+                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-6 col-md-3">
+            <label className="form-label small fw-semibold mb-1">HTTP Method</label>
+            <select className="form-select form-select-sm" value={draft.http_method}
+              onChange={(e) => setDraft((f) => ({ ...f, http_method: e.target.value }))}>
+              <option value="">All methods</option>
+              {['GET','POST','PATCH','PUT','DELETE'].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-6">
+            <label className="form-label small fw-semibold mb-1">Search</label>
+            <input type="text" className="form-control form-control-sm" placeholder="Action, resource type, path…" value={draft.search}
+              onChange={(e) => setDraft((f) => ({ ...f, search: e.target.value }))} />
           </div>
         </div>
       </SectionCard>
@@ -422,6 +528,7 @@ export function AuditLogs() {
                     <th style={{ width: 32 }}></th>
                     <th style={{ width: 170 }}>Timestamp</th>
                     <th style={{ width: 110 }}>Action</th>
+                    <th style={{ width: 90 }}>Severity</th>
                     <th>Resource Type</th>
                     <th style={{ width: 130 }}>Actor</th>
                     <th style={{ width: 130 }}>Resource ID</th>
@@ -434,7 +541,11 @@ export function AuditLogs() {
                       <tr
                         onClick={() => toggleExpanded(log.id)}
                         style={{ cursor: 'pointer' }}
-                        className={expanded.has(log.id) ? 'table-primary' : ''}
+                        className={
+                          expanded.has(log.id) ? 'table-primary' :
+                          log.severity === 'critical' ? 'table-danger' :
+                          log.severity === 'high' ? 'table-warning' : ''
+                        }
                       >
                         <td className="text-muted small text-center">
                           <i className={`bi bi-chevron-${expanded.has(log.id) ? 'down' : 'right'}`} />
@@ -446,6 +557,7 @@ export function AuditLogs() {
                           })}
                         </td>
                         <td><ActionBadge action={log.action} /></td>
+                        <td><SeverityBadge severity={log.severity} /></td>
                         <td><ResourceBadge type={log.resource_type} /></td>
                         <td className="small"><code className="text-secondary small">{log.actor_id ? log.actor_id.slice(0, 8) + '…' : '—'}</code></td>
                         <td className="small"><code className="text-secondary small">{log.resource_id ? log.resource_id.slice(0, 8) + '…' : '—'}</code></td>

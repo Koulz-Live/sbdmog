@@ -53,7 +53,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ── Health endpoints (unauthenticated) ────────────────────────────────────────
 app.get('/health',    (_req, res) => res.json({ status: 'ok' }));
 app.get('/readiness', (_req, res) => res.json({ status: 'ready' }));
-
 // ── Webhook routes (HMAC auth — not JWT) ─────────────────────────────────────
 app.post('/webhooks/backup-results',    handleBackupResults);
 app.post('/webhooks/etl-results',       handleEtlResults);

@@ -18,6 +18,11 @@ auditLogsRouter.get('/', requireRole('admin'), async (req: Request, res: Respons
       resource_type,
       resource_id,
       action,
+      severity,
+      http_method,
+      http_status,
+      request_id,
+      search,
       date_from,
       date_to,
       limit  = '50',
@@ -33,6 +38,11 @@ auditLogsRouter.get('/', requireRole('admin'), async (req: Request, res: Respons
     if (resource_type) q = q.eq('resource_type', resource_type);
     if (resource_id)   q = q.eq('resource_id', resource_id);
     if (action)        q = q.eq('action', action);
+    if (severity)      q = q.eq('severity', severity);
+    if (http_method)   q = q.eq('http_method', http_method.toUpperCase());
+    if (http_status)   q = q.eq('http_status', Number(http_status));
+    if (request_id)    q = q.eq('request_id', request_id);
+    if (search)        q = q.or(`resource_type.ilike.%${search}%,action.ilike.%${search}%,http_path.ilike.%${search}%`);
     if (date_from)     q = q.gte('created_at', date_from);
     if (date_to)       q = q.lte('created_at', date_to);
 
@@ -48,6 +58,102 @@ auditLogsRouter.get('/', requireRole('admin'), async (req: Request, res: Respons
   }
 });
 
+// ── GET /audit-logs/stats ────────────────────────────────────────────────────
+// Aggregated counts by action, resource_type, severity — for dashboards.
+auditLogsRouter.get('/stats', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { days = '7' } = req.query as Record<string, string>;
+    const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+    const [byAction, bySeverity, byResource, hourly] = await Promise.all([
+      adminClient
+        .from('audit_logs')
+        .select('action')
+        .gte('created_at', since),
+      adminClient
+        .from('audit_logs')
+        .select('severity')
+        .gte('created_at', since),
+      adminClient
+        .from('audit_logs')
+        .select('resource_type')
+        .gte('created_at', since),
+      // Recent security events (last 24h)
+      adminClient
+        .from('audit_logs')
+        .select('action, severity, created_at, actor_id, resource_type, ip_address')
+        .in('action', ['permission_denied', 'unauthenticated', 'login_failed', 'system_error', 'delete', 'role_change'])
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ]);
+
+    const count = <T extends Record<string, unknown>>(arr: T[], key: keyof T) =>
+      arr.reduce<Record<string, number>>((acc, item) => {
+        const v = String(item[key] ?? 'unknown');
+        acc[v] = (acc[v] ?? 0) + 1;
+        return acc;
+      }, {});
+
+    res.json({
+      data: {
+        period_days:    Number(days),
+        total:          (byAction.data ?? []).length,
+        by_action:      count(byAction.data ?? [], 'action'),
+        by_severity:    count(bySeverity.data ?? [], 'severity'),
+        by_resource:    count(byResource.data ?? [], 'resource_type'),
+        security_events: hourly.data ?? [],
+      },
+    });
+  } catch (err) {
+    console.error('[auditLogs:stats]', err);
+    res.status(500).json({ error: 'Failed to fetch audit stats.' });
+  }
+});
+
+// ── GET /audit-logs/risk-events ──────────────────────────────────────────────
+// Returns only high + critical severity events — security/risk dashboard feed.
+auditLogsRouter.get('/risk-events', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { days = '30', limit = '100' } = req.query as Record<string, string>;
+    const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, count, error } = await adminClient
+      .from('audit_logs')
+      .select('*', { count: 'exact' })
+      .in('severity', ['high', 'critical'])
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(Number(limit));
+
+    if (error) throw error;
+    res.json({ data, count });
+  } catch (err) {
+    console.error('[auditLogs:risk-events]', err);
+    res.status(500).json({ error: 'Failed to fetch risk events.' });
+  }
+});
+
+// ── GET /audit-logs/actor/:actorId ───────────────────────────────────────────
+// Full activity timeline for a specific user — for user management / investigations.
+auditLogsRouter.get('/actor/:actorId', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { limit = '100', offset = '0' } = req.query as Record<string, string>;
+    const { data, count, error } = await adminClient
+      .from('audit_logs')
+      .select('*', { count: 'exact' })
+      .eq('actor_id', req.params['actorId']!)
+      .order('created_at', { ascending: false })
+      .range(Number(offset), Number(offset) + Number(limit) - 1);
+
+    if (error) throw error;
+    res.json({ data, count });
+  } catch (err) {
+    console.error('[auditLogs:actor]', err);
+    res.status(500).json({ error: 'Failed to fetch actor timeline.' });
+  }
+});
+
 // ── GET /audit-logs/export  (CSV download) ───────────────────────────────────
 auditLogsRouter.get('/export', requireRole('admin'), async (req: Request, res: Response) => {
   try {
@@ -56,6 +162,7 @@ auditLogsRouter.get('/export', requireRole('admin'), async (req: Request, res: R
       resource_type,
       resource_id,
       action,
+      severity,
       date_from,
       date_to,
     } = req.query as Record<string, string>;
@@ -70,13 +177,18 @@ auditLogsRouter.get('/export', requireRole('admin'), async (req: Request, res: R
     if (resource_type) q = q.eq('resource_type', resource_type);
     if (resource_id)   q = q.eq('resource_id', resource_id);
     if (action)        q = q.eq('action', action);
+    if (severity)      q = q.eq('severity', severity);
     if (date_from)     q = q.gte('created_at', date_from);
     if (date_to)       q = q.lte('created_at', date_to);
 
     const { data, error } = await q;
     if (error) throw error;
 
-    const headers = ['id','actor_id','action','resource_type','resource_id','ip_address','user_agent','created_at'];
+    const headers = [
+      'id','actor_id','action','severity','resource_type','resource_id',
+      'http_method','http_path','http_status','duration_ms','request_id',
+      'ip_address','user_agent','created_at',
+    ];
     const csvRows = [
       headers.join(','),
       ...(data ?? []).map((row: any) =>
