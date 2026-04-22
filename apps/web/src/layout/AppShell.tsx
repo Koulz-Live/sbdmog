@@ -6,12 +6,16 @@ import React, { useState, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar.js';
 import { Topbar } from './Topbar.js';
+import { usePageView } from '../hooks/usePageView.js';
 
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const openSidebar  = useCallback(() => setSidebarOpen(true),  []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
+  // Auto-track every page navigation for all authenticated users
+  usePageView();
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh', overflow: 'hidden' }}>

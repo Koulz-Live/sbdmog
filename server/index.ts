@@ -30,6 +30,7 @@ import { usersRouter }                 from './routes/users.js';
 import { etlUploadRouter }             from './routes/etlUpload.js';
 import { sqlConnectionsRouter }        from './routes/sqlConnections.js';
 import { sqlEtlUploadRouter }          from './routes/sqlEtlUpload.js';
+import { activityTrackRouter }         from './routes/activityTrack.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
@@ -59,7 +60,9 @@ app.post('/webhooks/etl-results',       handleEtlResults);
 app.post('/webhooks/sql-check-results', handleSqlCheckResults);
 
 // ── Unauthenticated activity endpoint (user session events) ──────────────────
-app.use('/activity/user', userActivityRouter);
+app.use('/activity/user',  userActivityRouter);
+// ── Client-side behavioural tracking (JWT optional, fire-and-forget) ─────────
+app.use('/activity/track', activityTrackRouter);
 
 // ── Authenticated API routes ──────────────────────────────────────────────────
 // All routes below require a valid Supabase JWT in Authorization: Bearer <token>

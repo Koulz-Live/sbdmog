@@ -22,7 +22,8 @@ import { SectionCard }    from '../common/SectionCard.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.js';
 import { ErrorAlert }     from '../common/ErrorAlert.js';
 import type { Profile, Role } from '@heqcis/types';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth }        from '../hooks/useAuth.js';
+import { useAuditTrack }  from '../hooks/useAuditTrack.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface UsersResponse {
@@ -200,6 +201,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
 // ── Main component ─────────────────────────────────────────────────────────────
 export function UserManagement() {
   const { user: me } = useAuth();
+  const track = useAuditTrack();
   const qc = useQueryClient();
 
   // Filters
@@ -434,6 +436,7 @@ export function UserManagement() {
     if (roleFilter) params.set('role', roleFilter);
     if (deptFilter) params.set('department', deptFilter);
     if (showActive !== 'all') params.set('is_active', showActive === 'active' ? 'true' : 'false');
+    track('export', { resource_type: 'users', metadata: { filters: { search, roleFilter, deptFilter, showActive } } });
     window.open(`/api/users/export?${params.toString()}`, '_blank');
   }
 

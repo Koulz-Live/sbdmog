@@ -10,6 +10,7 @@ import { PageHeader } from '../layout/PageHeader.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.js';
 import { ErrorAlert } from '../common/ErrorAlert.js';
 import { EmptyState } from '../common/EmptyState.js';
+import { useAuditTrack } from '../hooks/useAuditTrack.js';
 import type { MonthlyReport } from '@heqcis/types';
 
 interface ListResponse { data: MonthlyReport[]; count: number; }
@@ -40,6 +41,7 @@ const COLUMNS: Column<MonthlyReport>[] = [
 
 export function MonthlyReports() {
   const navigate = useNavigate();
+  const track = useAuditTrack();
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError,   setAiError]   = useState<string | null>(null);
   const [period,    setPeriod]     = useState(() => new Date().toISOString().slice(0, 7));
@@ -74,6 +76,7 @@ export function MonthlyReports() {
             setAiLoading(true); setAiError(null);
             try {
               const res = await apiPost<{ data: MonthlyReport; ai: { model: string } }>('/monthly-reports/ai-generate', { period });
+              track('ai_generate', { resource_type: 'monthly_reports', metadata: { model: res.ai.model, period } });
               await refetch();
               navigate(`/monthly-reports/${res.data.id}`);
             } catch (e: any) {

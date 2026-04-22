@@ -11,6 +11,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner.js';
 import { ErrorAlert } from '../common/ErrorAlert.js';
 import { EmptyState } from '../common/EmptyState.js';
 import type { AuditLog, AuditAction } from '@heqcis/types';
+import { useAuditTrack } from '../hooks/useAuditTrack.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface Filters {
@@ -248,6 +249,7 @@ function DetailRow({ log }: { log: AuditLog }) {
 const BLANK_FILTERS: Filters = { action: '', resource_type: '', actor_id: '', resource_id: '', severity: '', http_method: '', search: '', date_from: '', date_to: '' };
 
 export function AuditLogs() {
+  const track = useAuditTrack();
   const [filters, setFilters]     = useState<Filters>(BLANK_FILTERS);
   const [draft, setDraft]         = useState<Filters>(BLANK_FILTERS);
   const [pageSize, setPageSize]   = useState(50);
@@ -300,7 +302,10 @@ export function AuditLogs() {
   void loginFailCount; // available for future use
   const securityEvents  = stats?.security_events ?? 0;
 
-  function applyFilters() { setFilters({ ...draft }); setPage(0); }
+  function applyFilters() {
+    setFilters({ ...draft }); setPage(0);
+    track('search', { resource_type: 'audit_logs', metadata: { filters: draft } });
+  }
   function clearFilters() { setFilters(BLANK_FILTERS); setDraft(BLANK_FILTERS); setPage(0); }
 
   function toggleExpanded(id: string) {
@@ -317,6 +322,7 @@ export function AuditLogs() {
 
   function handleExport() {
     const exportQS = buildQS(filters, 10000, 0);
+    track('export', { resource_type: 'audit_logs', metadata: { filters } });
     window.open(`/api/audit-logs/export${exportQS}`, '_blank');
   }
 

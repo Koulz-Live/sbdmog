@@ -104,9 +104,15 @@ function deriveAction(method: string, path: string): AuditAction {
   }
 }
 
-// Resources where GET (view/list/search) events should be audited
+// Resources where GET (view/list/search) events should be audited.
+// ALL resources are now tracked — keeping this set for potential future
+// differentiation between info-level and higher-severity GETs.
 const SENSITIVE_GET_RESOURCES = new Set([
   'users', 'audit_logs', 'profiles', 'security_findings', 'popia_events',
+  'incidents', 'backup_runs', 'etl_runs', 'maintenance', 'report_requests',
+  'submission_readiness', 'monthly_reports', 'change_requests', 'documents',
+  'handover_items', 'governance_insights', 'sql_connections', 'sql_stats',
+  'dashboard', 'user_management',
 ]);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
