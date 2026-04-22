@@ -56,7 +56,7 @@ export function EtlRuns() {
 
   return (
     <div>
-      <PageHeader title="ETL Runs" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="ETL Runs" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select

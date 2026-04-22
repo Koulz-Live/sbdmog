@@ -77,7 +77,7 @@ function BackupModal({ onClose, onSubmit, isPending }: BackupModalProps) {
 
           <div className="modal-body">
             <p className="text-muted mb-3" style={{ fontSize: '0.875rem' }}>
-              A faithful preservation record will be committed to the HEQCIS Supabase log and written to{' '}
+              A consistent preservation record will be committed to the HEQCIS Supabase log and written to{' '}
               <code>dbo.backup_history</code> in Azure SQL.
             </p>
 
@@ -195,7 +195,7 @@ export function BackupRuns() {
     <div>
       <PageHeader
         title="Backup Runs"
-        subtitle={`${total} records faithfully kept`}
+        subtitle={`${total} records consistently maintained`}
         actions={
           <button
             className="btn btn-sm btn-primary"

@@ -86,7 +86,7 @@ function typeBadge(type: 'azure_sql' | 'windows_sql') {
 function testStatusBadge(status: 'success' | 'failed' | null, testedAt: string | null) {
   if (!testedAt) return <span className="badge bg-light text-muted border">Not verified</span>;
   if (status === 'success')
-    return <span className="badge bg-success"><i className="bi bi-check-circle-fill me-1" />Faithful</span>;
+    return <span className="badge bg-success"><i className="bi bi-check-circle-fill me-1" />Consistent</span>;
   return <span className="badge bg-danger"><i className="bi bi-x-circle-fill me-1" />Failed</span>;
 }
 

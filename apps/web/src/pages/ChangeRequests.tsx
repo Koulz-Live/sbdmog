@@ -48,7 +48,7 @@ export function ChangeRequests() {
 
   return (
     <div>
-      <PageHeader title="Change Requests" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="Change Requests" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select

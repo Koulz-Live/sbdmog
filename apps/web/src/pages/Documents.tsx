@@ -36,7 +36,7 @@ export function Documents() {
 
   return (
     <div>
-      <PageHeader title="Documents" subtitle={`${total} documents faithfully kept`} />
+      <PageHeader title="Documents" subtitle={`${total} documents consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>

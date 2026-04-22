@@ -51,7 +51,7 @@ export function Maintenance() {
 
   return (
     <div>
-      <PageHeader title="Maintenance Activities" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="Maintenance Activities" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select

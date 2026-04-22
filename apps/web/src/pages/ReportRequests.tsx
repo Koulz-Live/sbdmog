@@ -51,7 +51,7 @@ export function ReportRequests() {
 
   return (
     <div>
-      <PageHeader title="Report Requests" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="Report Requests" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select

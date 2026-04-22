@@ -62,7 +62,7 @@ export function SecurityFindings() {
 
   return (
     <div>
-      <PageHeader title="Security Findings" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="Security Findings" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3 flex-wrap">
         <select

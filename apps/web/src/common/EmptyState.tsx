@@ -12,7 +12,7 @@ interface EmptyStateProps {
 export function EmptyState({
   icon    = 'bi-inbox',
   title   = 'The record is clear',
-  message = 'Nothing has been recorded here yet — every faithful work has a beginning.',
+  message = 'Nothing has been recorded here yet.',
   action,
 }: EmptyStateProps) {
   return (

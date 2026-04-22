@@ -163,7 +163,7 @@ function AzureSqlPanel({ stats, isLoading, error, refetch }: {
               className={`badge ${stats.connected ? 'bg-success' : 'bg-danger'} ms-1`}
               style={{ fontSize: '0.7rem' }}
             >
-              {stats.connected ? `Faithful · ${stats.latency_ms} ms` : 'Unreachable'}
+              {stats.connected ? `Consistent · ${stats.latency_ms} ms` : 'Unreachable'}
             </span>
           )}
         </div>
@@ -232,7 +232,7 @@ export function Dashboard() {
     <div>
       <PageHeader
         title="Operations Dashboard"
-        subtitle="A faithful account of all HEQCIS service health indicators"
+        subtitle="A consistent account of all HEQCIS service health indicators"
         actions={
           <button className="btn btn-sm btn-outline-secondary" onClick={handleRefresh}>
             <i className="bi bi-arrow-clockwise me-1" />

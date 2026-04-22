@@ -50,7 +50,7 @@ export function MonthlyReports() {
 
   return (
     <div>
-      <PageHeader title="Monthly Reports" subtitle={`${total} reports faithfully kept`} />
+      <PageHeader title="Monthly Reports" subtitle={`${total} reports consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => refetch()}>

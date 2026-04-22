@@ -58,7 +58,7 @@ export function PopiaEvents() {
 
   return (
     <div>
-      <PageHeader title="POPIA Events" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="POPIA Events" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select

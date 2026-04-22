@@ -45,7 +45,7 @@ export function HandoverItems() {
 
   return (
     <div>
-      <PageHeader title="Handover Items" subtitle={`${total} records faithfully kept`} />
+      <PageHeader title="Handover Items" subtitle={`${total} records consistently maintained`} />
 
       <div className="d-flex gap-2 mb-3">
         <select
