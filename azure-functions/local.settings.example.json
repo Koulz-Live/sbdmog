@@ -31,6 +31,11 @@
     "ETL_JOB_NAME": "HEQCISWEB_Job",
     "ETL_SQL_QUERY": "SELECT TOP 5 job_id, name, enabled, date_created, date_modified FROM msdb.dbo.sysjobs WHERE name = 'HEQCISWEB_Job'",
 
+    "PERF_CHECK_SCHEDULE": "0 0 6 * * *",
+    "INTEGRITY_CHECK_SCHEDULE": "0 0 2 * * *",
+    "INDEX_CHECK_SCHEDULE": "0 0 3 * * *",
+    "INTERNAL_API_URL": "https://your-vercel-url.vercel.app",
+
     "KEY_VAULT_URI": "",
     "USE_KEY_VAULT": "false",
 

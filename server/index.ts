@@ -31,10 +31,14 @@ import { etlUploadRouter }             from './routes/etlUpload.js';
 import { sqlConnectionsRouter }        from './routes/sqlConnections.js';
 import { sqlEtlUploadRouter }          from './routes/sqlEtlUpload.js';
 import { activityTrackRouter }         from './routes/activityTrack.js';
+import { dbMonitoringRouter }           from './routes/dbMonitoring.js';
 
 import { handleBackupResults }         from './webhooks/backupResults.js';
 import { handleEtlResults }            from './webhooks/etlResults.js';
 import { handleSqlCheckResults }       from './webhooks/sqlCheckResults.js';
+import { handleDbPerformanceResults }  from './webhooks/dbPerformanceResults.js';
+import { handleDbIntegrityResults, handleDbDataIntegrityResults } from './webhooks/dbIntegrityResults.js';
+import { handleDbIndexResults }        from './webhooks/dbIndexResults.js';
 
 const app = express();
 
@@ -55,9 +59,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.get('/health',    (_req, res) => res.json({ status: 'ok' }));
 app.get('/readiness', (_req, res) => res.json({ status: 'ready' }));
 // ── Webhook routes (HMAC auth — not JWT) ─────────────────────────────────────
-app.post('/webhooks/backup-results',    handleBackupResults);
-app.post('/webhooks/etl-results',       handleEtlResults);
-app.post('/webhooks/sql-check-results', handleSqlCheckResults);
+app.post('/webhooks/backup-results',          handleBackupResults);
+app.post('/webhooks/etl-results',             handleEtlResults);
+app.post('/webhooks/sql-check-results',       handleSqlCheckResults);
+app.post('/webhooks/db-performance-results',  handleDbPerformanceResults);
+app.post('/webhooks/db-integrity-results',    handleDbIntegrityResults);
+app.post('/webhooks/db-data-integrity-results', handleDbDataIntegrityResults);
+app.post('/webhooks/db-index-results',        handleDbIndexResults);
 
 // ── Unauthenticated activity endpoint (user session events) ──────────────────
 app.use('/activity/user',  userActivityRouter);
@@ -89,6 +97,7 @@ app.use('/api/users',                 usersRouter);
 app.use('/api/etl-upload',            etlUploadRouter);
 app.use('/api/sql-connections',       sqlConnectionsRouter);
 app.use('/api/sql-etl-upload',        sqlEtlUploadRouter);
+app.use('/api/db-monitoring',         dbMonitoringRouter);
 
 // ── 404 catch-all ─────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

@@ -18,3 +18,5 @@ export * from './prompts/popiaEventsGenerate.js';
 export * from './services/popiaEventsGenerate.js';
 export * from './prompts/auditLogsAnalyse.js';
 export * from './services/auditLogsAnalyse.js';
+export * from './prompts/dbMonitoring.js';
+export * from './services/dbMonitoring.js';

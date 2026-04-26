@@ -66,6 +66,10 @@ az functionapp config appsettings set \
     "SQL_CHECK_SCHEDULE=0 */30 * * * *" \
     "BACKUP_CHECK_SCHEDULE=0 0 */4 * * *" \
     "ETL_CHECK_SCHEDULE=0 */15 * * * *" \
+    "PERF_CHECK_SCHEDULE=0 0 6 * * *" \
+    "INTEGRITY_CHECK_SCHEDULE=0 0 2 * * *" \
+    "INDEX_CHECK_SCHEDULE=0 0 3 * * *" \
+    "INTERNAL_API_URL=${WEBHOOK_BASE_URL}" \
     "USE_KEY_VAULT=true" \
     "KEY_VAULT_URI=${KV_URI}" \
   -o none

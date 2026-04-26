@@ -34,6 +34,7 @@ const UserManagement     = lazy(() => import('./pages/UserManagement.js').then((
 const EtlUpload          = lazy(() => import('./pages/EtlUpload.js').then((m) => ({ default: m.EtlUpload })));
 const SqlConnections     = lazy(() => import('./pages/SqlConnections.js').then((m) => ({ default: m.SqlConnections })));
 const SqlEtlUpload       = lazy(() => import('./pages/SqlEtlUpload.js').then((m) => ({ default: m.SqlEtlUpload })));
+const DbMonitoring       = lazy(() => import('./pages/DbMonitoring.js').then((m) => ({ default: m.DbMonitoring })));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
           { path: 'etl-upload',           element: <SuspenseWrapper><EtlUpload /></SuspenseWrapper> },
           { path: 'sql-connections',      element: <SuspenseWrapper><SqlConnections /></SuspenseWrapper> },
           { path: 'sql-etl-upload',       element: <SuspenseWrapper><SqlEtlUpload /></SuspenseWrapper> },
+          { path: 'db-monitoring',         element: <SuspenseWrapper><DbMonitoring /></SuspenseWrapper> },
         ],
       },
     ],

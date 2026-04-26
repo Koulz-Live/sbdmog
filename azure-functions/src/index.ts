@@ -6,3 +6,6 @@
 import './functions/sqlCheck.js';
 import './functions/backupCheck.js';
 import './functions/etlCheck.js';
+import './functions/performanceCheck.js';
+import './functions/integrityCheck.js';
+import './functions/indexCheck.js';
