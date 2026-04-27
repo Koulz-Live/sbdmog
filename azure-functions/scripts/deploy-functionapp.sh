@@ -43,7 +43,7 @@ echo "[deploy] ✔ Build output verified"
 
 # ─── 4. Publish to Azure ─────────────────────────────────────────────────────
 echo "[deploy] Publishing to Azure Function App: $FUNCTION_APP_NAME"
-func azure functionapp publish "$FUNCTION_APP_NAME" --typescript
+func azure functionapp publish "$FUNCTION_APP_NAME" --build remote
 
 echo ""
 echo "[deploy] ✔ Deployment complete."

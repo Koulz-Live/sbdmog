@@ -9,6 +9,8 @@ apps/web/dist/
 azure-functions/local.settings.json
 azure-functions/dist/
 azure-functions/deploy.zip
+azure-functions/deploy-full.zip
+azure-functions/deploy-clean.zip
 api/dist/
 
 .vercel
