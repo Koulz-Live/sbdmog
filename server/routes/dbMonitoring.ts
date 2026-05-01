@@ -361,7 +361,7 @@ dbMonitoringRouter.post('/trigger/:type', async (req: Request, res: Response) =>
   }
 
   try {
-    const url = `${FUNC_APP_HOST}/admin/functions/${funcName}/invoke`;
+    const url = `${FUNC_APP_HOST}/admin/functions/${funcName}`;
     const r = await fetch(url, {
       method:  'POST',
       headers: { 'x-functions-key': masterKey, 'Content-Type': 'application/json' },
