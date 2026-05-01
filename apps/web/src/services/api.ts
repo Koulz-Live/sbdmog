@@ -3,6 +3,7 @@
 // Authorization header is attached automatically from the Zustand auth store.
 
 import { useAuthStore } from '../store/auth.store.js';
+import { supabase } from './supabase.js';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
 
@@ -20,6 +21,7 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestOptions = {},
+  _retry = true,
 ): Promise<T> {
   const { accessToken } = useAuthStore.getState();
 
@@ -37,6 +39,18 @@ export async function apiFetch<T = unknown>(
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
+
+  // Token expired — refresh once and retry
+  if (response.status === 401 && _retry) {
+    const { data: { session } } = await supabase.auth.refreshSession();
+    if (session?.access_token) {
+      useAuthStore.getState().setAuth(
+        useAuthStore.getState().user!,
+        session.access_token,
+      );
+      return apiFetch<T>(path, options, false);
+    }
+  }
 
   if (!response.ok) {
     let message = `HTTP ${response.status}`;

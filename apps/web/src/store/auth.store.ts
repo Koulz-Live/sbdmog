@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     // Keep auth state in sync with Supabase
     supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -53,6 +53,9 @@ export const useAuthStore = create<AuthState>((set) => ({
           .maybeSingle();
         if (profile) {
           set({ user: profile as Profile, accessToken: session.access_token, loading: false });
+        } else {
+          // Token refreshed but profile already in store — just update the token
+          set((state) => state.user ? { accessToken: session.access_token } : {});
         }
       } else if (event === 'SIGNED_OUT') {
         set({ user: null, accessToken: null, loading: false });
