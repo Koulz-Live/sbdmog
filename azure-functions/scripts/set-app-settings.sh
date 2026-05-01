@@ -90,7 +90,7 @@ az functionapp config appsettings set \
     "INDEX_CHECK_SCHEDULE=0 0 3 * * *" \
     "INTERNAL_API_URL=${WEBHOOK_BASE_URL}" \
     "USE_KEY_VAULT=false" \
-    "WEBSITE_NODE_DEFAULT_VERSION=~20" \
+    "WEBSITE_NODE_DEFAULT_VERSION=~22" \
     "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING=$(az storage account show-connection-string --name "${STORAGE_ACCOUNT:-stheqcisconnect001}" --resource-group "$RESOURCE_GROUP" --query connectionString -o tsv 2>/dev/null)" \
     "WEBSITE_CONTENTSHARE=${FUNCTION_APP_NAME}" \
   -o none

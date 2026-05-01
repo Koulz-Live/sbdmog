@@ -27,7 +27,7 @@ FUNCTION_APP_NAME="${FUNCTION_APP_NAME:-func-heqcis-connector}"
 APP_INSIGHTS_NAME="${APP_INSIGHTS_NAME:-appi-heqcis-connector}"
 KEY_VAULT_NAME="${KEY_VAULT_NAME:-kv-heqcis-conn}"  # Optional — set USE_KEY_VAULT=true to enable
 RUNTIME="node"
-RUNTIME_VERSION="20"   # Node 24 is not yet stable on Linux Consumption in all regions (e.g. South Africa North)
+RUNTIME_VERSION="22"   # Node 22 LTS — Node 20 EOL 2026-04-30, Node 24 unstable on SA North Consumption
 
 # ─── Login / subscription ─────────────────────────────────────────────────────
 
