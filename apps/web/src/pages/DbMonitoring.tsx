@@ -939,13 +939,32 @@ function IndexTab() {
 // MAIN PAGE
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── Trigger result state ─────────────────────────────────────────────────────
+type TriggerState = { status: 'idle' } | { status: 'success'; funcName: string } | { status: 'error'; message: string };
+
 export function DbMonitoring() {
   const [tab, setTab] = useState<TabId>('performance');
+  const [triggerState, setTriggerState] = useState<TriggerState>({ status: 'idle' });
+  const qc = useQueryClient();
 
   const { data: summary } = useQuery({
     queryKey: ['db-monitoring', 'summary'],
     queryFn:  () => apiGet<SummaryResp>('/db-monitoring/summary'),
     staleTime: 60_000,
+  });
+
+  const trigger = useMutation({
+    mutationFn: (type: TabId) => apiPost<{ ok: boolean; functionName: string; type: string }>(`/db-monitoring/trigger/${type}`, {}),
+    onSuccess: (data) => {
+      setTriggerState({ status: 'success', funcName: data.functionName });
+      // Refresh all db-monitoring queries after a short delay so new log has time to arrive
+      setTimeout(() => void qc.invalidateQueries({ queryKey: ['db-monitoring'] }), 3500);
+      setTimeout(() => setTriggerState({ status: 'idle' }), 8000);
+    },
+    onError: (err: Error) => {
+      setTriggerState({ status: 'error', message: err.message });
+      setTimeout(() => setTriggerState({ status: 'idle' }), 6000);
+    },
   });
 
   const tabs: { id: TabId; icon: string; label: string; badge?: number | null; badgeColor?: string }[] = [
@@ -971,12 +990,51 @@ export function DbMonitoring() {
     },
   ];
 
+  const tabLabels: Record<TabId, string> = {
+    'performance':    'Performance Check',
+    'integrity':      'Integrity Check',
+    'data-integrity': 'Data Integrity Check',
+    'index':          'Index Maintenance Check',
+  };
+
   return (
     <div>
       <PageHeader
         title="Database Monitoring"
         subtitle="Auto-logged performance, integrity, and index health with AI-powered analysis"
       />
+
+      {/* Manual Trigger Banner */}
+      <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div>
+          {triggerState.status === 'success' && (
+            <div className="alert alert-success d-flex align-items-center gap-2 py-2 mb-0 small">
+              <i className="bi bi-check-circle-fill" />
+              <span>
+                <strong>{triggerState.funcName}</strong> triggered successfully — new results will appear shortly.
+              </span>
+            </div>
+          )}
+          {triggerState.status === 'error' && (
+            <div className="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0 small">
+              <i className="bi bi-exclamation-triangle-fill" />
+              <span>{triggerState.message}</span>
+            </div>
+          )}
+        </div>
+        <button
+          className="btn btn-outline-primary btn-sm d-flex align-items-center gap-2 flex-shrink-0"
+          onClick={() => { setTriggerState({ status: 'idle' }); trigger.mutate(tab); }}
+          disabled={trigger.isPending}
+          title={`Manually run ${tabLabels[tab]} now`}
+        >
+          {trigger.isPending ? (
+            <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" /><span>Running…</span></>
+          ) : (
+            <><i className="bi bi-play-circle-fill" /><span>Run {tabLabels[tab]}</span></>
+          )}
+        </button>
+      </div>
 
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4" role="tablist">

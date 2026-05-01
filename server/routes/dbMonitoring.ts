@@ -331,3 +331,54 @@ dbMonitoringRouter.get('/summary', async (_req: Request, res: Response) => {
     });
   } catch (err) { console.error('[dbMon:summary]', err); res.status(500).json({ error: 'Failed to fetch summary.' }); }
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MANUAL TRIGGER — invokes Azure Function via admin API
+// POST /api/db-monitoring/trigger/:type
+// ══════════════════════════════════════════════════════════════════════════════
+
+const FUNC_MAP: Record<string, string> = {
+  'performance':    'performanceCheck',
+  'integrity':      'integrityCheck',
+  'data-integrity': 'integrityCheck',
+  'index':          'indexCheck',
+};
+
+const FUNC_APP_HOST = 'https://func-heqcis-connectors.azurewebsites.net';
+
+dbMonitoringRouter.post('/trigger/:type', async (req: Request, res: Response) => {
+  const { type } = req.params as { type: string };
+  const funcName = FUNC_MAP[type];
+  if (!funcName) {
+    res.status(400).json({ error: `Unknown monitor type: "${type}". Valid values: ${Object.keys(FUNC_MAP).join(', ')}` });
+    return;
+  }
+
+  const masterKey = process.env['AZURE_FUNC_MASTER_KEY'];
+  if (!masterKey) {
+    res.status(503).json({ error: 'AZURE_FUNC_MASTER_KEY not configured on server.' });
+    return;
+  }
+
+  try {
+    const url = `${FUNC_APP_HOST}/admin/functions/${funcName}/invoke`;
+    const r = await fetch(url, {
+      method:  'POST',
+      headers: { 'x-functions-key': masterKey, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ input: null }),
+    });
+
+    if (!r.ok) {
+      const body = await r.text().catch(() => '');
+      console.error(`[dbMon:trigger] Azure Function invoke failed ${r.status}:`, body);
+      res.status(502).json({ error: `Function invoke failed with status ${r.status}.` });
+      return;
+    }
+
+    console.log(`[dbMon:trigger] Invoked ${funcName} successfully for type="${type}"`);
+    res.json({ ok: true, functionName: funcName, type });
+  } catch (err) {
+    console.error('[dbMon:trigger]', err);
+    res.status(500).json({ error: 'Failed to invoke Azure Function.' });
+  }
+});
