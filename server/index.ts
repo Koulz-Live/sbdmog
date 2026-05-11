@@ -4,6 +4,8 @@
 
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 import { authMiddleware }          from './middleware/auth.js';
 import { auditMiddleware }         from './middleware/audit.js';
@@ -42,15 +44,56 @@ import { handleDbIndexResults }        from './webhooks/dbIndexResults.js';
 
 const app = express();
 
+// ── Security middleware ───────────────────────────────────────────────────────
+app.use(helmet());
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path === '/health' || req.path === '/readiness',
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // stricter: 5 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // only count failed requests
+});
+
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // 30 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(generalLimiter);
+
 // ── Global middleware ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
 
-const ALLOWED_ORIGIN = process.env['ALLOWED_ORIGIN'] ?? 'https://sbdmog.vercel.app';
+// ── CORS middleware with origin validation ────────────────────────────────────
+const ALLOWED_ORIGINS = (process.env['ALLOWED_ORIGINS'] ?? 'https://sbdmog.vercel.app')
+  .split(',')
+  .map((origin) => origin.trim());
+
+function validateOrigin(origin: string | undefined): boolean {
+  if (!origin) return ALLOWED_ORIGINS.includes('*');
+  return ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*');
+}
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  const origin = req.headers['origin'] as string | undefined;
+  if (validateOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || ALLOWED_ORIGINS[0]);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Max-Age', '3600');
   if (req.method === 'OPTIONS') { res.status(204).send(); return; }
   next();
 });
@@ -58,17 +101,18 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ── Health endpoints (unauthenticated) ────────────────────────────────────────
 app.get('/health',    (_req, res) => res.json({ status: 'ok' }));
 app.get('/readiness', (_req, res) => res.json({ status: 'ready' }));
-// ── Webhook routes (HMAC auth — not JWT) ─────────────────────────────────────
-app.post('/webhooks/backup-results',          handleBackupResults);
-app.post('/webhooks/etl-results',             handleEtlResults);
-app.post('/webhooks/sql-check-results',       handleSqlCheckResults);
-app.post('/webhooks/db-performance-results',  handleDbPerformanceResults);
-app.post('/webhooks/db-integrity-results',    handleDbIntegrityResults);
-app.post('/webhooks/db-data-integrity-results', handleDbDataIntegrityResults);
-app.post('/webhooks/db-index-results',        handleDbIndexResults);
 
-// ── Unauthenticated activity endpoint (user session events) ──────────────────
-app.use('/activity/user',  userActivityRouter);
+// ── Webhook routes (HMAC auth — not JWT, rate limited) ───────────────────────
+app.post('/webhooks/backup-results',          webhookLimiter, handleBackupResults);
+app.post('/webhooks/etl-results',             webhookLimiter, handleEtlResults);
+app.post('/webhooks/sql-check-results',       webhookLimiter, handleSqlCheckResults);
+app.post('/webhooks/db-performance-results',  webhookLimiter, handleDbPerformanceResults);
+app.post('/webhooks/db-integrity-results',    webhookLimiter, handleDbIntegrityResults);
+app.post('/webhooks/db-data-integrity-results', webhookLimiter, handleDbDataIntegrityResults);
+app.post('/webhooks/db-index-results',        webhookLimiter, handleDbIndexResults);
+
+// ── Unauthenticated activity endpoint (user session events, rate limited) ─────
+app.use('/activity/user',  authLimiter, userActivityRouter);
 // ── Client-side behavioural tracking (JWT optional, fire-and-forget) ─────────
 app.use('/activity/track', activityTrackRouter);
 

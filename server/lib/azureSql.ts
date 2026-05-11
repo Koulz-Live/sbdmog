@@ -21,11 +21,6 @@ function buildConfig(): sql.config {
     );
   }
 
-  console.log(
-    `[azureSql] Connecting → server="${server}" db="${database}" user="${user}" ` +
-    `user_length=${user.length} server_length=${server.length}`,
-  );
-
   return {
     server,
     database,

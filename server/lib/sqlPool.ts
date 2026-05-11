@@ -91,11 +91,6 @@ export async function buildPoolFromRecord(
   }
   // managed_identity — no credentials needed; mssql picks up the ambient identity
 
-  console.log(
-    `[sqlPool] Building pool → label="${record.label}" server="${record.server}" ` +
-    `db="${record.database_name}" auth="${record.auth_type}"`,
-  );
-
   const pool = await sql.connect(config);
   return pool;
 }
